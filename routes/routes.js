@@ -5,8 +5,8 @@ const { crearUsuarios } = require('../controllers/crearUsuariosControllers');
 const { login } = require('../controllers/login');
 const { getAllMenu } = require('../controllers/menu');
 
-router.post('/crear-usuarios', crearUsuarios);
+router.post('/crear-usuarios', verifyToken , crearUsuarios);
 router.post('/login', login);
-router.get('/get-all-menu', getAllMenu);
+router.get('/get-all-menu',verifyToken, getAllMenu);
 
 module.exports = router;

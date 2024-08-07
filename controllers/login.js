@@ -18,7 +18,6 @@ async function login(req, res) {
         }
         
         const login = await loginServices.loginServices(data);
-        
         if(login.status === 401){
             res.status(401).json({ error: login.error });
         }else{
@@ -26,7 +25,8 @@ async function login(req, res) {
             const token = generateToken(login);
             console.log("token : " , token);
             // Usuario autenticado, puedes devolver información del usuario y tokens de sesión
-            if(login.data.rol === 'Administrador'){
+
+            if(login.data.Rol === 'Administrador'){
                 showMenu = await menuServices.getAllMenuService();
 
             }else{
