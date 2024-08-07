@@ -3,7 +3,11 @@ const SECRET_KEY = process.env.SECRET_KEY || 'makita-ti-chile';
 
 // Función para generar un token JWT
 const generateToken = (user) => {
-    return jwt.sign({ id: user.data.UsuarioID, username: user.data.Nombre }, SECRET_KEY, { expiresIn: '8h' });
+    return jwt.sign({ 
+        id: user.data.UsuarioID, 
+        username: user.data.Nombre ,  
+        role: user.data.Rol  }, 
+        SECRET_KEY, { expiresIn: '8h' });
 };
 
 // Middleware para verificar el token JWT
@@ -18,6 +22,8 @@ const verifyToken = (req, res, next) => {
         if (err) {
             return res.status(401).send({mensaje : 'Token expirado' });
         }
+
+        
         req.user = decoded; // Puedes usar req.user en tus rutas
         next();
     });
