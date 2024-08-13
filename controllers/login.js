@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const sql = require('mssql');
-const { generateToken, verifyToken } = require('../auth/auth.js');
+const { generateToken } = require('../auth/auth.js');
 const loginServices = require('../services/login-services/loginServices.js');
 const menuServices = require('../services/menu-services/menuServices.js');
 

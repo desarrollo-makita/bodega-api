@@ -16,7 +16,7 @@ const SALT_ROUNDS = 10; // Número de rondas de sal para bcrypt
 async function crearUsuarios(req, res) {
     try {
         console.log(req.body);
-        const dataRequest = req.body;
+        const dataRequest = req.body.data;
         let responseData = [];
         let missingParams = [];
 
