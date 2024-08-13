@@ -116,9 +116,11 @@ async function crearUsuarios(req, res) {
  */
 function formatDate(date) {
     
+    console.log("date _: " , date);
     if(date != null){
-        const fechaMoment = moment(date, "DD-MM-YYYY");
+        const fechaMoment = moment(date);
         const fechaFormateada = fechaMoment.format("YYYY-MM-DD");
+        console.log('Fecha dos : ' , fechaFormateada);
         return fechaFormateada;
     }
 }
