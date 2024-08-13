@@ -6,6 +6,8 @@ require('dotenv').config();
 const moment = require('moment');
 const bcrypt = require('bcrypt');
 
+const usuariosServices = require('../services/usuarios-services/usuarioServices.js');
+
 const SALT_ROUNDS = 10; // Número de rondas de sal para bcrypt
 
 
@@ -110,6 +112,32 @@ async function crearUsuarios(req, res) {
 }
 
 /**
+ * Retorna todos los usuarios del sistema
+ * @param {*} req 
+ * @param {*} res 
+ */
+async function getAllUsers(req, res) {
+    try {
+        
+        const allUsers = await usuariosServices.getAllUser();
+
+        if(allUsers.status === 401){
+            res.status(401).json({ error: allUsers.error });
+        }else{
+            // Usuario autenticado, puedes devolver información del usuario y tokens de sesión
+            res.status(200).json(allUsers);
+        }
+        
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error en el servidor' });
+    } finally {
+        await closeDatabaseConnection();
+    }
+}
+
+/**
  * Formateamos Fecha
  * @param {*} date 
  * @returns 
@@ -127,5 +155,5 @@ function formatDate(date) {
 
 
 module.exports = {
-    crearUsuarios
+    getAllUsers , crearUsuarios
 };
