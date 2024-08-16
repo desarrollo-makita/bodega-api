@@ -28,7 +28,8 @@ async function crearUsuarios(data) {
             fechaInicio: FechaInicio,
             fechaFin: FechaFin,
             nombreUsuario: NombreUsuario,
-            clave: Clave
+            clave: Clave,
+            actividad: Actividad
         } = dataRequest;
 
         // Verificación de parámetros requeridos
@@ -79,6 +80,7 @@ async function crearUsuarios(data) {
             .input('FechaFin', sql.VarChar, formatDate(FechaFin))
             .input('NombreUsuario', sql.VarChar(50), NombreUsuario)
             .input('ClaveHash', sql.VarChar(256), ClaveHash)
+            .input('Actividad', sql.VarChar(50), Actividad)
             .output('ResultadoID', sql.VarChar)
             .output('Mensaje', sql.VarChar)
             .execute('Crear_Usuario_SP');
@@ -160,7 +162,8 @@ async function editUser(data) {
                 Estado = '${data.usuarioActivo}',
                 FechaInicio = '${data.fechaInicio}',
                 FechaFin = '${data.fechaFin}',
-                NombreUsuario = '${data.usuario}'
+                NombreUsuario = '${data.usuario}',
+                Actividad = '${data.actividad}'
             WHERE UsuarioID = '${data.IdUsario}'
         `);
 
@@ -236,7 +239,7 @@ async function getUserName(username) {
         if (user.recordset && user.recordset.length > 0) {
             return ({ status: 200 ,  mensaje: 'usuario encontrado' , existe : true });
         }else{
-            return ({ status: 200 ,  mensaje: 'usuario no encontrado' , existe : false });
+            return ({ status: 200 ,  mensaje: 'usuario no encontrado' , existe : boolean = false });
         }
 
         

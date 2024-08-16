@@ -89,7 +89,7 @@ async function getUserName(req, res) {
         const existUser = await usuariosServices.getUserName(username);
         
         // Usuario autenticado, puedes devolver información del usuario y tokens de sesión
-        res.status(200).json(existUser);
+        res.status(200).json(existUser.existe);
 
         
     } catch (error) {
