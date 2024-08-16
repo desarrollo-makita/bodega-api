@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+
 const sql = require('mssql');
 const { connectToDatabase, closeDatabaseConnection } = require('../config/database.js');
 const menuServices = require('../services/menu-services/menuServices.js');
