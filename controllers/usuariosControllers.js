@@ -36,11 +36,11 @@ async function crearUsuarios(req, res) {
  */
 async function getAllUsers(req, res) {
     try {
-        
+        logger.info(`Iniciamos la función getAllUser controllers`);
         const allUsers = await usuariosServices.getAllUser();
 
-        if(allUsers.status === 401){
-            res.status(401).json({ error: allUsers.error });
+        if(allUsers.status != 200){
+            res.status(404).json({ error: allUsers.error });
         }else{
             // Usuario autenticado, puedes devolver información del usuario y tokens de sesión
             res.status(200).json(allUsers);
@@ -100,6 +100,27 @@ async function getUserName(req, res) {
     } 
 }
 
+/**
+ * Controlador para eliminar un usuario
+ * @param {*} req 
+ * @param {*} res 
+ */
+async function deletetUser(req, res) {
+    try {
+        logger.info(`Iniciamos la función deletetUser controllers`);
+        const updateUsers = await usuariosServices.deleteUser(req.query);
+       
+        res.status(200).json(updateUsers);
+    
+    } catch (error) {
+        // Manejamos cualquier error ocurrido durante el proceso
+        logger.error(`Error al editar usuarios: ${error.message}`);
+        res.status(500).json({ error: `Error en el servidor [editar-Usuarios] :  ${error.message}`  });
+    }finally{
+        await closeDatabaseConnection();
+    }
+}
+
 
 
 
@@ -107,5 +128,6 @@ module.exports = {
     getAllUsers, 
     crearUsuarios,
     editUser,
-    getUserName
+    getUserName,
+    deletetUser
 };

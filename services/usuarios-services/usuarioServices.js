@@ -94,12 +94,12 @@ async function crearUsuarios(data) {
 
         responseData.push(resul);
 
-        logger.info(`Fin de la función crearUsuarios ${JSON.stringify(responseData)}`);
+        logger.info(`Fin de la función crearUsuarios ${JSON.stringify(resul)}`);
 
         // Hacer commit de la transacción
         await transaction.commit();
 
-        return { status: 200, responseData };
+        return { status: 200, resul };
 
     } catch (error) {
         // Si ocurre un error, hacer rollback de la transacción
@@ -115,23 +115,23 @@ async function crearUsuarios(data) {
 
 
 
-async function getAllUser(data) {
+async function getAllUser() {
     try {
-        
+        logger.info(`Iniciamos la función getAllUser services`);
         await connectToDatabase('BodegaMantenedor');
         const request = new sql.Request();
         
         // Buscar el usuario por NombreUsuario
         const getAllusers = await request.query('SELECT * FROM Usuarios');
         
-       
+       console.log("*******" , getAllusers);
         if (getAllusers.recordset.length === 0) {
-            return ({ status: 401 ,  error: 'No existen Usuarios' });
+            return ({ status: 404 ,  error: 'No existen Usuarios' });
         }
 
         const usuarios = getAllusers.recordset;
        
-        return usuarios;
+        return { status: 200, data: usuarios };
 
     } catch (error) {
         return { status: 500, error: 'Error en el servidor getAllUser' };
@@ -187,19 +187,19 @@ async function editUser(data) {
 
 async function getAllUser(data) {
     try {
-        
         await connectToDatabase('BodegaMantenedor');
         const request = new sql.Request();
         
         // Buscar el usuario por NombreUsuario
         const getAllusers = await request.query('SELECT * FROM Usuarios');
-        
-       
         if (getAllusers.recordset.length === 0) {
-            return ({ status: 401 ,  error: 'No existen Usuarios' });
+            return ({ status: 404 ,  error: 'No existen Usuarios' });
+        }else{
+            const usuarios = getAllusers.recordset;
+            return { status: 200, data: usuarios };
         }
 
-        const usuarios = getAllusers.recordset;
+        
        
         return usuarios;
 
@@ -227,6 +227,11 @@ function formatDate(date) {
     }
 }
 
+/**
+ * Traemos el suario desde la base de datos
+ * @param {*} username 
+ * @returns true/false
+ */
 async function getUserName(username) {
     try {
         logger.info(`Iniciamos la función getUserName usuarioService`);
@@ -251,11 +256,53 @@ async function getUserName(username) {
     }
 }
 
+async function deleteUser(data) {
+    logger.info(`Iniciamos la función deleteUser usuariosServices ${JSON.stringify(data)}`);
+    let transaction;
+    try {
+        const usuarioID = data.idUsuario;
+        if (usuarioID === undefined || usuarioID === null) {
+            console.error("UsuarioID es undefined o null");
+        } else {
+            console.log("UsuarioID:", usuarioID);
+        }
+        await connectToDatabase('BodegaMantenedor');
+        
+        // Crear una nueva transacción
+        transaction = new sql.Transaction();
+        await transaction.begin();
+        const request = new sql.Request(transaction); // Usa la transacción en la solicitud
+
+        // Ejecutar la consulta de actualización dentro de la transacción
+        const updateUsers = await request.query(`
+            DELETE FROM Usuarios 
+            WHERE UsuarioID = ${usuarioID}
+        `);
+
+        logger.info(`updateUsers usuariosServices :  ${updateUsers}`);
+        if (updateUsers.rowsAffected[0] > 0) {
+            await transaction.commit(); // Confirma la transacción si todo va bien
+            return { status: 200, message: 'Usuario eliminado correctamente' };
+        } else {
+            await transaction.rollback(); // Revertir cambios si no se realizó ninguna actualización
+            return { status: 401, error: 'No existen Usuarios o no se realizaron cambios' };
+        }
+
+    } catch (error) {
+        console.log(error , 'eeror');
+        if (transaction) await transaction.rollback(); // Revertir cambios en caso de error
+        console.log('error : ', error);
+        return { status: 500, error: 'Error en el servidor deleteUser' };
+    } finally {
+        await closeDatabaseConnection();
+    }
+}
 
 
 module.exports = {
     getAllUser, 
     crearUsuarios,
     editUser,
-    getUserName
+    getUserName,
+    deleteUser
 }
