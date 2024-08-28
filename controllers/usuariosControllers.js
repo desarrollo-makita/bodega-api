@@ -61,7 +61,7 @@ async function getAllUsers(req, res) {
  */
 async function editUser(req, res) {
     try {
-        logger.info(`Iniciamos la función editarUsuarios controllers`);
+        logger.info(`Iniciamos la función editarUsuarios controllers ${req}`);
         const updateUsers = await usuariosServices.editUser(req.body);
        
         res.status(200).json(updateUsers);
@@ -114,7 +114,7 @@ async function deletetUser(req, res) {
     
     } catch (error) {
         // Manejamos cualquier error ocurrido durante el proceso
-        logger.error(`Error al editar usuarios: ${error.message}`);
+        logger.error(`Error al eliminar usuario: ${error.message}`);
         res.status(500).json({ error: `Error en el servidor [editar-Usuarios] :  ${error.message}`  });
     }finally{
         await closeDatabaseConnection();
