@@ -28,12 +28,11 @@ async function login(req, res) {
 
             // Convierte las fechas a objetos de tipo moment, ajustando a la fecha sin hora
             const fechaInicio = moment(FechaInicio).startOf('day');
-            console.log('fechaInicio', fechaInicio.format('YYYY-MM-DD'));
+           
             const fechaFin = moment(FechaFin).endOf('day'); // Ajuste al final del día
-            console.log('fechaFin', fechaFin.format('YYYY-MM-DD'));
+           
             const fechaActual = moment().startOf('day'); // Fecha actual sin hora
-            console.log('fechaActual', fechaActual.format('YYYY-MM-DD'));
-
+          
             // Comprueba si la fecha actual está fuera del rango de FechaInicio y FechaFin
             if (fechaActual.isBefore(fechaInicio) || fechaActual.isAfter(fechaFin)) {
                 return res.status(403).json({

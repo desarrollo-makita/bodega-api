@@ -143,29 +143,55 @@ async function getAllUser() {
 async function editUser(data) {
     let transaction;
     try {
-        console.log("dataaaaa: ", data);
-        await connectToDatabase('BodegaMantenedor');
+        console.log("data : " , data );
+        // Encriptar la contraseña solo si se proporciona
+        let claveHash = data.password ? await bcrypt.hash(data.password, SALT_ROUNDS) : null;
+        console.log("claveHash : ", claveHash);
         
+        await connectToDatabase('BodegaMantenedor');
         // Crear una nueva transacción
         transaction = new sql.Transaction();
         await transaction.begin();
         const request = new sql.Request(transaction); // Usa la transacción en la solicitud
 
-        // Ejecutar la consulta de actualización dentro de la transacción
-        const updateUsers = await request.query(`
+        // Construir la consulta SQL de manera dinámica
+        let query = `
             UPDATE Usuarios 
-            SET Nombre = '${data.nombre}',
-                Apellido = '${data.apellido}',
-                Email = '${data.email}',
-                Area = '${data.area}',
-                Rol = '${data.role}',
-                Estado = '${data.usuarioActivo}',
-                FechaInicio = '${data.fechaInicio}',
-                FechaFin = '${data.fechaFin}',
-                NombreUsuario = '${data.usuario}',
-                Actividad = '${data.actividad}'
-            WHERE UsuarioID = '${data.IdUsario}'
-        `);
+            SET Nombre = @Nombre,
+                Apellido = @Apellido,
+                Email = @Email,
+                Area = @Area,
+                Rol = @Rol,
+                Estado = @Estado,
+                FechaInicio = @FechaInicio,
+                FechaFin = @FechaFin,
+                NombreUsuario = @NombreUsuario,
+                Actividad = @Actividad
+        `;
+
+        // Agregar ClaveHash solo si está definido
+        if (claveHash) {
+            query += `, ClaveHash = @ClaveHash`;
+            request.input('ClaveHash', sql.VarChar, claveHash); // Añadir parámetro para ClaveHash
+        }
+
+        query += ` WHERE UsuarioID = @UsuarioID`;
+
+        // Añadir todos los parámetros
+        request.input('Nombre', sql.VarChar, data.nombre);
+        request.input('Apellido', sql.VarChar, data.apellido);
+        request.input('Email', sql.VarChar, data.email);
+        request.input('Area', sql.VarChar, data.area);
+        request.input('Rol', sql.VarChar, data.role);
+        request.input('Estado', sql.VarChar, data.usuarioActivo);
+        request.input('FechaInicio', sql.Date, data.fechaInicio);
+        request.input('FechaFin', sql.Date, data.fechaFin);
+        request.input('NombreUsuario', sql.VarChar, data.usuario);
+        request.input('Actividad', sql.VarChar, data.actividad);
+        request.input('UsuarioID', sql.Int, data.IdUsario); // Asume que UsuarioID es un entero
+        
+        // Ejecutar la consulta de actualización dentro de la transacción
+        const updateUsers = await request.query(query);
 
         console.log("updateUser", updateUsers);
         if (updateUsers.rowsAffected[0] > 0) {
@@ -175,7 +201,6 @@ async function editUser(data) {
             await transaction.rollback(); // Revertir cambios si no se realizó ninguna actualización
             return { status: 401, error: 'No existen Usuarios o no se realizaron cambios' };
         }
-
     } catch (error) {
         if (transaction) await transaction.rollback(); // Revertir cambios en caso de error
         console.log('error : ', error);
