@@ -7,7 +7,7 @@ async function sendEmailWithDB(data) {
          
          await connectToDatabase('BdQMakita');
        
-         console.log("dataaaaaaaaaaa : ", data);
+        console.log("dataaaaaaaaaaa : ", data);
         const request = new sql.Request(); // Nueva instancia de request en cada iteración
         let currentDate = new Date();
         let formattedDate = `${currentDate.getDate()}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
@@ -16,14 +16,12 @@ async function sendEmailWithDB(data) {
         let correo = data.email;
         let idUsuario = data.idUsuario;
         
-        
-        
         body = `Su clave temporal es: \n\n${data.password} \n\nAtte.:\nAdministrador - Sistemas\nMCL`;
         
         await request
             .input('profile_name', sql.VarChar, 'Sistemas')
-            .input('recipients', sql.VarChar, 'soporte@makita.cl')
-            .input('copy_recipients', sql.VarChar, correo)
+            .input('recipients', sql.VarChar, correo)
+            .input('copy_recipients', sql.VarChar, '')
             .input('subject', sql.VarChar, subject)
             .input('body', sql.VarChar, body)
             .input('importance', sql.VarChar, 'High')

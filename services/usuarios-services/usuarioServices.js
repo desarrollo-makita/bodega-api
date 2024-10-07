@@ -336,7 +336,52 @@ async function editUserID(data) {
     const request = new sql.Request(transaction); // Usa la transacción en la solicitud
 
     // Construir la consulta SQL de manera dinámica
-    let query = ` Update  Usuarios Set ClaveHash = '${claveHash}' where UsuarioID = ${data.idUsuario} `;
+    let query = ` Update  Usuarios Set ClaveHash = '${claveHash}' , recuperarClave = 1  where UsuarioID = ${data.idUsuario} `;
+
+    request.input('UsuarioID', sql.Int, data.IdUsuario); // Asume que UsuarioID es un entero
+
+    // Ejecutar la consulta de actualización dentro de la transacción
+    const updateUsers = await request.query(query);
+
+    console.log('updateUser', updateUsers);
+    if (updateUsers.rowsAffected[0] > 0) {
+      await transaction.commit(); // Confirma la transacción si todo va bien
+      return { status: 200, message: 'Usuario actualizado correctamente' };
+    } else {
+      await transaction.rollback(); // Revertir cambios si no se realizó ninguna actualización
+      return {
+        status: 401,
+        error: 'No existen Usuarios o no se realizaron cambios',
+      };
+    }
+  } catch (error) {
+    console.log('errorrr', error);
+    if (transaction) await transaction.rollback(); // Revertir cambios en caso de error
+    console.log('error : ', error);
+    return { status: 500, error: 'Error en el servidor editUser' };
+  } finally {
+    await closeDatabaseConnection();
+  }
+}
+
+async function replacePasswordId(data) {
+  let transaction;
+  try {
+    console.log('dataasasas : ', data);
+    // Encriptar la contraseña solo si se proporciona
+    let claveHash = data.password
+      ? await bcrypt.hash(data.password, SALT_ROUNDS)
+      : null;
+    console.log('claveHash : ', claveHash);
+
+    await connectToDatabase('BodegaMantenedor');
+    // Crear una nueva transacción
+    transaction = new sql.Transaction();
+    await transaction.begin();
+    const request = new sql.Request(transaction); // Usa la transacción en la solicitud
+
+    // Construir la consulta SQL de manera dinámica
+    let query = ` Update  Usuarios Set ClaveHash = '${claveHash}' , recuperarClave = 0  where UsuarioID = ${data.idUsuario} `;
 
     request.input('UsuarioID', sql.Int, data.IdUsuario); // Asume que UsuarioID es un entero
 
@@ -371,4 +416,5 @@ module.exports = {
   getUserName,
   deleteUser,
   editUserID,
+  replacePasswordId
 };

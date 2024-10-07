@@ -12,7 +12,7 @@ const {
 const { login, validaClaveActual } = require('../controllers/login');
 const { getAllMenu } = require('../controllers/menu');
 const {obtenerUbicacionItem,actualizaUbicacion} = require('../controllers/obtenerUbicacionControllers');
-const {recuperarPassword} = require('../controllers/recuperarPasswordControllers')
+const {recuperarPassword , replacePassword} = require('../controllers/recuperarPasswordControllers')
 
 router.post('/crear-usuarios', crearUsuarios);
 router.put('/editar-usuarios', verifyToken, editUser);
@@ -26,5 +26,6 @@ router.put('/actualiza-ubicacion/', actualizaUbicacion);
 router.post('/valida-clave-actual', validaClaveActual);
 router.put('/editar-usuarios-id', verifyToken, editUserID);
 router.post('/recuperar-password', recuperarPassword);
+router.put('/replace-password-id', replacePassword);
 
 module.exports = router;

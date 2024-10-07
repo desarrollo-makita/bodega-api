@@ -42,6 +42,7 @@ async function recuperarPassword(req, res) {
   } catch (error) {
     // Manejamos cualquier error ocurrido durante el proceso
     logger.error(`Error en recuperarPassword: ${error.message}`);
+    
     res.status(500).json({
       error: `Error en el servidor [recuperarPassword] :  ${error.message}`,
     });
@@ -59,7 +60,34 @@ async function generarClaveAleatoria(longitud) {
   return resultado;
 }
 
+/**
+ * Recuperar Password
+ * @returns
+ */
+async function replacePassword(req, res) {
+  try {
+    console.log("entroooooooo :", req.body.data);
+    const data = req.body.data;
+    logger.info(`Iniciamos la función replacePassword controllers`);
+    
+    const replaceClave = await usuariosServices.replacePasswordId(data);
+
+    res.status(200).json({mensaje : replaceClave});
+    
+
+    
+  } catch (error) {
+    // Manejamos cualquier error ocurrido durante el proceso
+    logger.error(`Error en replacePassword: ${error.message}`);
+    
+    res.status(500).json({
+      error: `Error en el servidor [replacePassword] :  ${error.message}`,
+    });
+  } 
+}
+
 
 module.exports = {
-  recuperarPassword
+  recuperarPassword,
+  replacePassword
 };
