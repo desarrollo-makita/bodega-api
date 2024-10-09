@@ -14,8 +14,9 @@ async function recuperarPassword(req, res) {
     const username = req.body.usuario;
     logger.info(`Iniciamos la función recuperarPassword controllers`);
    
-    const getUser = await usuariosServices.getUserName(username);
+    const getUser = await usuariosServices.getUserNameService(username);
 
+    console.log(getUser)
     if(getUser.existe){
       const claveAleatoria = await generarClaveAleatoria(6);
       const email = getUser.email;

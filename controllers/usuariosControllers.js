@@ -86,7 +86,7 @@ async function getUserName(req, res) {
     const username = req.query.username; // Obtener el username del query string
     console.log('username : ', username);
 
-    const existUser = await usuariosServices.getUserName(username);
+    const existUser = await usuariosServices.getUserNameService(username);
 
     // Usuario autenticado, puedes devolver información del usuario y tokens de sesión
     res.status(200).json(existUser.existe);

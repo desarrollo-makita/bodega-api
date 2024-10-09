@@ -240,7 +240,7 @@ function formatDate(date) {
  * @param {*} username
  * @returns true/false
  */
-async function getUserName(username) {
+async function getUserNameService(username) {
   let emai;
   try {
     logger.info(`Iniciamos la función getUserName usuarioService`);
@@ -413,7 +413,7 @@ module.exports = {
   getAllUser,
   crearUsuarios,
   editUser,
-  getUserName,
+  getUserNameService,
   deleteUser,
   editUserID,
   replacePasswordId
