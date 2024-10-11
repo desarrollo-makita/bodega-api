@@ -7,8 +7,8 @@ async function insertarInfo(req, res) {
     logger.info(`Iniciamos funcion insertarInfo  - ${JSON.stringify(req.body)}`);
     try {
         // Obtener el ID de la URL
-        const { data } = req.body;
-        const { usuario, modelo, fabricante, sistemaOperativo, numeroSerie, idAndroid } = data;
+        const { dataDispositivo } = req.body;
+        const { usuario, modelo, fabricante, sistemaOperativo, numeroSerie, idAndroid } = dataDispositivo;
 
         // Conectar a la base de datos
         await connectToDatabase("BodegaMantenedor");    
