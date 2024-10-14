@@ -17,10 +17,10 @@ async function crearUsuarios(data) {
   let transaction;
   try {
     const dataRequest = data;
-    let responseData = [];
+    const actividades = data.actividad;
     let missingParams = [];
 
-    logger.info(`Iniciamos la función crearUsuarios`);
+    logger.info(`Iniciamos la función crearUsuarios ${JSON.stringify(data)}`);
     const {
       nombre: Nombre,
       apellido: Apellido,
@@ -32,7 +32,7 @@ async function crearUsuarios(data) {
       fechaFin: FechaFin,
       nombreUsuario: NombreUsuario,
       clave: Clave,
-      actividad: Actividad,
+      
     } = dataRequest;
 
     // Verificación de parámetros requeridos
@@ -47,6 +47,7 @@ async function crearUsuarios(data) {
       FechaFin,
       NombreUsuario,
       Clave,
+     
     };
 
     for (const [key, value] of Object.entries(requiredParams)) {
@@ -85,9 +86,9 @@ async function crearUsuarios(data) {
       .input('FechaFin', sql.VarChar, formatDate(FechaFin))
       .input('NombreUsuario', sql.VarChar(50), NombreUsuario)
       .input('ClaveHash', sql.VarChar(256), ClaveHash)
-      .input('Actividad', sql.VarChar(50), Actividad)
-      .output('ResultadoID', sql.VarChar)
       .output('Mensaje', sql.VarChar)
+      .output('StatusID', sql.Int)
+      .output('UsuarioID', sql.Int)
       .execute('Crear_Usuario_SP');
 
     result.data = dataRequest;
@@ -97,14 +98,11 @@ async function crearUsuarios(data) {
       data: result.data,
     };
 
-    responseData.push(resul);
-
     logger.info(`Fin de la función crearUsuarios ${JSON.stringify(resul)}`);
-
     // Hacer commit de la transacción
-    await transaction.commit();
-
+await transaction.commit();
     return { status: 200, resul };
+  
   } catch (error) {
     // Si ocurre un error, hacer rollback de la transacción
     if (transaction) {
@@ -235,8 +233,43 @@ function formatDate(date) {
   }
 }
 
+async function insertarActividades(actividadList, usuarioID, nombreUsuario) {
+  let responseActividad;
+  let result;
+
+  try {
+      // Iniciamos la conexión solo una vez
+      await connectToDatabase('BodegaMantenedor');
+
+      logger.info(`Iniciamos la función insertarActividades ${JSON.stringify(actividadList)} , ${usuarioID}`);
+
+      // Recorremos la lista de actividades
+      for (const actividad of actividadList) {
+          const request = new sql.Request(); // Nueva instancia de request en cada iteración
+
+          result = await request
+              .input('UsuarioID', sql.Int, usuarioID)
+              .input('NombreUsuario', sql.NVarChar(50), nombreUsuario)
+              .input('NombreActividad', sql.NVarChar(50), actividad.nombreActividad)
+              .input('CodigoActividad', sql.Int, actividad.codigoActividad)
+              .execute('Insertar_Actividad_SP'); // Asegúrate de usar await aquí
+
+          logger.info(`Actividad ${actividad.nombreActividad} insertada correctamente.`);
+      }
+
+      responseActividad = result;
+      logger.info(`Finalizamos la función insertarActividades ${JSON.stringify(actividadList)} , ${usuarioID}`);
+
+      return responseActividad;
+
+  } catch (error) {
+      logger.error(`Error en insertarActividades: ${error.message}`);
+  }
+}
+
+
 /**
- * Traemos el suario desde la base de datos
+ * Traemos el usuario desde la base de datos
  * @param {*} username
  * @returns true/false
  */
@@ -292,14 +325,12 @@ async function deleteUser(data) {
     await transaction.begin();
     const request = new sql.Request(transaction); // Usa la transacción en la solicitud
 
-    // Ejecutar la consulta de actualización dentro de la transacción
-    const updateUsers = await request.query(`
-            DELETE FROM Usuarios 
-            WHERE UsuarioID = ${usuarioID}
-        `);
+    const result = await request
+      .input('usuarioID', sql.VarChar(50), usuarioID)
+      .execute('Eliminar_Usuario_SP');
 
-    logger.info(`updateUsers usuariosServices :  ${updateUsers}`);
-    if (updateUsers.rowsAffected[0] > 0) {
+    logger.info(`deleteUser deleteUserServices :  ${JSON.stringify(result)}`);
+    if (result.rowsAffected[0] > 0) {
       await transaction.commit(); // Confirma la transacción si todo va bien
       return { status: 200, message: 'Usuario eliminado correctamente' };
     } else {
@@ -367,7 +398,7 @@ async function editUserID(data) {
 async function replacePasswordId(data) {
   let transaction;
   try {
-    console.log('dataasasas : ', data);
+   
     // Encriptar la contraseña solo si se proporciona
     let claveHash = data.password
       ? await bcrypt.hash(data.password, SALT_ROUNDS)
@@ -416,5 +447,6 @@ module.exports = {
   getUserNameService,
   deleteUser,
   editUserID,
-  replacePasswordId
+  replacePasswordId,
+  insertarActividades
 };

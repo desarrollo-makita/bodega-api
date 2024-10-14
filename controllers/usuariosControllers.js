@@ -14,19 +14,32 @@ const usuariosServices = require('../services/usuarios-services/usuarioServices.
  */
 async function crearUsuarios(req, res) {
   try {
-    console.log(req.body.data);
     logger.info(`Iniciamos la función crearUsuarios controllers`);
+   
     const createUsers = await usuariosServices.crearUsuarios(req.body.data);
+
+
+    console.log("createuser : " ,createUsers);
+    if(createUsers.resul.output.StatusID === 0){
+
+      let actividadList = createUsers.resul.data.actividad;
+      let usuarioID = createUsers.resul.output.UsuarioID;
+      let nombreUsuario = createUsers.resul.data.nombreUsuario;
+      
+      const createActividad = await usuariosServices.insertarActividades(actividadList , usuarioID , nombreUsuario);
+
+      console.log(createActividad)
+    }
 
     res.status(200).json(createUsers);
   } catch (error) {
+   
     // Manejamos cualquier error ocurrido durante el proceso
     logger.error(`Error en crearUsuarios: ${error.message}`);
+    
     res.status(500).json({
       error: `Error en el servidor [crear-Usuarios] :  ${error.message}`,
     });
-  } finally {
-    await closeDatabaseConnection();
   }
 }
 
@@ -149,5 +162,5 @@ module.exports = {
   editUser,
   getUserName,
   deletetUser,
-  editUserID,
+  editUserID
 };

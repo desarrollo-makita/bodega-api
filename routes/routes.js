@@ -15,6 +15,7 @@ const {obtenerUbicacionItem,actualizaUbicacion} = require('../controllers/obtene
 const {recuperarPassword , replacePassword} = require('../controllers/recuperarPasswordControllers')
 const {insertarInfo} = require('../controllers/insertarInfoDispositivoControllers')
 const {getAllareas , deletetArea , insertarArea} = require('../controllers/areasControllers');
+const {getAllActividades} = require('../controllers/actividadesControllers');
 
 
 // endpoint de usuarios
@@ -45,6 +46,9 @@ router.post('/insertar-info-dispositivo', insertarInfo);
 router.get('/get-all-areas', getAllareas);
 router.delete('/delete-area', deletetArea);
 router.post('/insertar-nueva-area', insertarArea);
+
+// Endpoint para mantenedor de Actividades
+router.get('/get-all-actividades' , getAllActividades)
 
 
 
