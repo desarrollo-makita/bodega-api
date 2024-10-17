@@ -9,7 +9,7 @@ async function getAllActividades() {
     const request = new sql.Request();
 
     // Buscar el la acividad por NombreActividad
-    const actividades = await request.query('SELECT * FROM Actividades');
+    const actividades = await request.query('SELECT nombreActividad as nombreActividad, codigoActividad as codigoActividad FROM Actividades');
     
     if (actividades.recordset.length === 0) {
       return { status: 404, error: 'No existen Actividades para mostrar' };

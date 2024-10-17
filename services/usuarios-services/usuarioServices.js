@@ -100,7 +100,7 @@ async function crearUsuarios(data) {
 
     logger.info(`Fin de la función crearUsuarios ${JSON.stringify(resul)}`);
     // Hacer commit de la transacción
-await transaction.commit();
+  await transaction.commit();
     return { status: 200, resul };
   
   } catch (error) {
@@ -125,10 +125,12 @@ async function getAllUser() {
     const request = new sql.Request();
 
     // Buscar el usuario por NombreUsuario
-    const getAllusers = await request.query('SELECT * FROM Usuarios');
-
-    console.log('*******', getAllusers);
-    if (getAllusers.recordset.length === 0) {
+    const getAllusers = await request.query(`
+      SELECT u.*, ua.actividadID, ua.nombreActividad
+      FROM usuarios u
+      LEFT JOIN UsuarioActividades ua ON u.UsuarioID = ua.usuarioId`);
+    
+      if (getAllusers.recordset.length === 0) {
       return { status: 404, error: 'No existen Usuarios' };
     }
 

@@ -18,8 +18,6 @@ async function crearUsuarios(req, res) {
    
     const createUsers = await usuariosServices.crearUsuarios(req.body.data);
 
-
-    console.log("createuser : " ,createUsers);
     if(createUsers.resul.output.StatusID === 0){
 
       let actividadList = createUsers.resul.data.actividad;
@@ -28,7 +26,6 @@ async function crearUsuarios(req, res) {
       
       const createActividad = await usuariosServices.insertarActividades(actividadList , usuarioID , nombreUsuario);
 
-      console.log(createActividad)
     }
 
     res.status(200).json(createUsers);
@@ -56,8 +53,10 @@ async function getAllUsers(req, res) {
     if (allUsers.status != 200) {
       res.status(404).json({ error: allUsers.error });
     } else {
+
+      const resAllUser  = ordenaData(allUsers.data);
       // Usuario autenticado, puedes devolver información del usuario y tokens de sesión
-      res.status(200).json(allUsers);
+      res.status(200).json(resAllUser);
     }
   } catch (error) {
     console.error(error);
@@ -97,8 +96,7 @@ async function getUserName(req, res) {
   try {
     logger.info(`Iniciamos la función getUserName controllers`);
     const username = req.query.username; // Obtener el username del query string
-    console.log('username : ', username);
-
+    
     const existUser = await usuariosServices.getUserNameService(username);
 
     // Usuario autenticado, puedes devolver información del usuario y tokens de sesión
@@ -154,6 +152,46 @@ async function editUserID(req, res) {
   } finally {
     await closeDatabaseConnection();
   }
+}
+
+
+function ordenaData(allUserList){
+  
+  const userActivities = {};
+  allUserList.forEach(user => {
+    // Si el ID del usuario no está ya en el objeto, agrégalo
+    if (!userActivities[user.UsuarioID]) {
+        userActivities[user.UsuarioID] = {
+            UsuarioID: user.UsuarioID,
+            Nombre: user.Nombre,
+            Apellido: user.Apellido,
+            Email: user.Email,
+            Area: user.Area,
+            Rol: user.Rol,
+            Estado: user.Estado,
+            FechaInicio: user.FechaInicio,
+            FechaFin: user.FechaFin,
+            NombreUsuario: user.NombreUsuario,
+            ClaveHash: user.ClaveHash,
+            Actividad: null,
+            recuperarClave: null,
+            actividad: []
+        };
+    }
+    // Agregar la actividad actual al arreglo de actividades del usuario
+    userActivities[user.UsuarioID].actividad.push({
+        nombreActividad: user.nombreActividad,
+        codigoActividad: user.actividadID
+    });
+  });
+
+  // Convertir el objeto userActivities nuevamente a un arreglo
+  const outputData = {
+    status: allUserList.status,
+    data: Object.values(userActivities)
+  };
+
+  return outputData
 }
 
 module.exports = {

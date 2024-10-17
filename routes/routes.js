@@ -24,7 +24,7 @@ router.put('/editar-usuarios', verifyToken, editUser);
 router.get('/get-all-users', verifyToken, getAllUsers);
 router.get('/get-nombre-usuario', getUserName);
 router.delete('/delete-usuario', verifyToken, deletetUser);
-router.put('/editar-usuarios-id', verifyToken, editUserID);
+router.put('/editar-usuarios-id', verifyToken, editUserID); // reisar endpoint al parecer no esta siendo utiñlizado
 
 // endpoint login
 router.post('/login', login);
