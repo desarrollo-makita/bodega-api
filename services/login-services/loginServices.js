@@ -45,8 +45,8 @@ async function loginServices(data) {
 
 async function validaClaveActual(data) {
   try {
-    logger.info(`Iniciamos la función validaClaveActual Services`);
-    const { nombreUsuario, password } = data;
+    logger.info(`Iniciamos la función validaClaveActual Services ${JSON.stringify(data)}` );
+    const { nombreUsuario, clave } = data;
     console.log('Datos recibidos validaClaveActual : ', data);
 
     await connectToDatabase('BodegaMantenedor');
@@ -62,7 +62,7 @@ async function validaClaveActual(data) {
     }
 
     const user = result.recordset[0];
-    const claveValida = await bcrypt.compare(password, user.ClaveHash);
+    const claveValida = await bcrypt.compare(clave, user.ClaveHash);
 
     if (!claveValida) {
       return {

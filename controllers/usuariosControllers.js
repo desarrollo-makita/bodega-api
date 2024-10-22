@@ -1,8 +1,5 @@
 const logger = require('../config/logger.js');
-const {
-  connectToDatabase,
-  closeDatabaseConnection,
-} = require('../config/database.js');
+const {connectToDatabase, closeDatabaseConnection,} = require('../config/database.js');
 const sql = require('mssql');
 require('dotenv').config();
 
@@ -20,6 +17,8 @@ async function crearUsuarios(req, res) {
 
     if(createUsers.resul.output.StatusID === 0){
 
+      //const deleteActividades = await usuariosServices.eliminarActividades(createUsers.resul.output.UsuarioID);
+      
       let actividadList = createUsers.resul.data.actividad;
       let usuarioID = createUsers.resul.output.UsuarioID;
       let nombreUsuario = createUsers.resul.data.nombreUsuario;
@@ -71,9 +70,30 @@ async function getAllUsers(req, res) {
  * @returns
  */
 async function editUser(req, res) {
+  let createActividad;  
   try {
-    logger.info(`Iniciamos la función editarUsuarios controllers ${req}`);
+    
+    logger.info(`Iniciamos la función editarUsuarios controllers`);
+    console.log("Request de entrada : " , req.body);
+    
     const updateUsers = await usuariosServices.editUser(req.body);
+
+    console.log("respuesta desde el procedimiento almacenado" , updateUsers) ;
+   
+    
+    if(updateUsers.codigoMensaje === 1){
+      
+      await usuariosServices.eliminarActividades(updateUsers.dataUsuario.IdUsuario);
+      
+      let actividadList = updateUsers.dataUsuario.actividad;
+      let usuarioID = updateUsers.dataUsuario.IdUsuario;
+      let nombreUsuario = updateUsers.dataUsuario.usuario;
+    
+
+      createActividad = await usuariosServices.insertarActividades(actividadList , usuarioID , nombreUsuario);
+
+      console.log("createActividad" , updateUsers);
+    }
 
     res.status(200).json(updateUsers);
   } catch (error) {
@@ -156,7 +176,6 @@ async function editUserID(req, res) {
 
 
 function ordenaData(allUserList){
-  
   const userActivities = {};
   allUserList.forEach(user => {
     // Si el ID del usuario no está ya en el objeto, agrégalo
@@ -164,7 +183,8 @@ function ordenaData(allUserList){
         userActivities[user.UsuarioID] = {
             UsuarioID: user.UsuarioID,
             Nombre: user.Nombre,
-            Apellido: user.Apellido,
+            ApellidoPaterno: user.ApellidoPaterno,
+            ApellidoMaterno: user.ApellidoMaterno,
             Email: user.Email,
             Area: user.Area,
             Rol: user.Rol,

@@ -32,6 +32,33 @@ async function getAllActividades(req, res) {
   }
 }
 
+/**
+ * Retorna todos los combobox en forma de lista para pintar los comboBox de la vista
+ * @param {*} req
+ * @param {*} res
+ */
+async function getActividadId(req, res) {
+  try {
+    logger.info(`Iniciamos la función getActividadesUsuarioId controllers`);
+    const { idActividad } = req.params;
+    
+    const activityId = await actividadServices.getActividadesUsuarioId(idActividad);
+
+    if (activityId.status != 200) {
+      res.status(activityId.status).json({ error: activityId.error });
+    } else {
+      
+      res.status(200).json(activityId);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error en el servidor' });
+  } finally {
+    await closeDatabaseConnection();
+  }
+}
+
 module.exports = {
-  getAllActividades
+  getAllActividades,
+  getActividadId
 };

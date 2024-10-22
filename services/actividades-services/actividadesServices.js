@@ -25,6 +25,31 @@ async function getAllActividades() {
   }
 }
 
+async function getActividadesUsuarioId(idActividad) {
+  try {
+    logger.info(`Iniciamos la función getActividadesUsuarioId services`);
+    await connectToDatabase('BodegaMantenedor');
+    const request = new sql.Request();
+
+    // Buscar el la acividad por NombreActividad
+    const actividades = await request.query(`SELECT * FROM UsuarioActividades where usuarioId = ${idActividad}`);
+    console.log("respuesta actividades : " , actividades);
+    if (actividades.recordset.length === 0) {
+      return { status: 404, error: 'No existen Actividades para mostrar' };
+    }
+
+    const areaList = actividades.recordset;
+
+    return { status: 200, data: areaList };
+  } catch (error) {
+      return { status: 500, error: 'Error en el servidor getActividadesUsuarioId' };
+  } finally {
+      await closeDatabaseConnection();
+  }
+}
+
+
 module.exports = {
-  getAllActividades
+  getAllActividades,
+  getActividadesUsuarioId
   };

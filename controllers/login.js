@@ -2,12 +2,14 @@ const sql = require('mssql');
 const { generateToken } = require('../auth/auth.js');
 const loginServices = require('../services/login-services/loginServices.js');
 const menuServices = require('../services/menu-services/menuServices.js');
+const actividadServices = require('../services/actividades-services/actividadesServices.js');
 const moment = require('moment');
 const logger = require('../config/logger.js');
 
 async function login(req, res) {
   logger.info(`Iniciamos la función login controllers`);
   let showMenu;
+  let showActividades;
   try {
     const { nombreUsuario, clave } = req.body;
     console.log(req.body);
@@ -22,7 +24,7 @@ async function login(req, res) {
       res.status(401).json({ error: login.error });
     } else {
       // Validar las fechas de inicio y fin
-      const { FechaInicio, FechaFin } = login.data;
+      const { FechaInicio, FechaFin , UsuarioID } = login.data;
 
       // Convierte las fechas a objetos de tipo moment, ajustando a la fecha sin hora
       const fechaInicio = moment(FechaInicio).startOf('day');
@@ -33,6 +35,8 @@ async function login(req, res) {
 
       const vigencia = fechaFin.diff(fechaActual, 'days'); // Días de vigencia
 
+      const idUsuario = UsuarioID;
+
       // Comprueba si la fecha actual está fuera del rango de FechaInicio y FechaFin
       if (fechaActual.isBefore(fechaInicio) || fechaActual.isAfter(fechaFin)) {
         return res.status(403).json({
@@ -42,12 +46,10 @@ async function login(req, res) {
       }
 
       const token = generateToken(login, vigencia);
-      console.log('token : ', token);
-      console.log('login : ', login);
-      // Usuario autenticado, puedes devolver información del usuario y tokens de sesión
-
+      
       if (login.data.Rol === 'Administrador') {
         showMenu = await menuServices.getAllMenuService();
+        showActividades = await actividadServices.getActividadesUsuarioId(idUsuario);
       } else {
         showMenu = await menuServices.perfilConsulta();
       }
@@ -58,7 +60,8 @@ async function login(req, res) {
           ...login.data,
           menu: showMenu,
           token: token,
-          vigencia: vigencia, // Aquí agregas allMenu como una propiedad del objeto data
+          vigencia: vigencia,
+          actividades: showActividades.data // Aquí agregas allMenu como una propiedad del objeto data
         },
       };
 
@@ -77,10 +80,10 @@ async function validaClaveActual(req, res) {
   logger.info(`Iniciamos la función validaClaveActual controllers`);
   console.log('ingresamos al validaClaveActual', req.body);
   try {
-    const { nombreUsuario, password } = req.body;
+    const { nombreUsuario, clave } = req.body;
     const data = {
       nombreUsuario: nombreUsuario,
-      password: password,
+      clave: clave,
     };
     const claveActual = await loginServices.validaClaveActual(data);
     console.log('clave actual : ', claveActual);

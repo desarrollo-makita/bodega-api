@@ -8,7 +8,8 @@ const generateToken = (user, vigencia) => {
       id: user.data.UsuarioID,
       username: user.data.Nombre,
       role: user.data.Rol,
-      apellido: user.data.Apellido,
+      apellidoPaterno: user.data.ApellidoPaterno,
+      ApellidoMaterno: user.data.ApellidoMaterno,
       fechaInicio: user.data.FechaInicio,
       fechaFin: user.data.FechaFin,
       vigencia: vigencia,
@@ -21,7 +22,7 @@ const generateToken = (user, vigencia) => {
 // Middleware para verificar el token JWT
 const verifyToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1]; // 'Bearer <token>'
-  console.log('token : ', token);
+
   if (!token) {
     return res.status(403).send({ mensaje: 'Token requerido' });
   }
