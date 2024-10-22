@@ -14,6 +14,7 @@ const SALT_ROUNDS = 10; // Número de rondas de sal para bcrypt
  * @returns
  */
 async function crearUsuarios(data) {
+  console.log("datos del usuario : " ,data);
   let transaction;
   try {
     const dataRequest = data;
@@ -23,7 +24,8 @@ async function crearUsuarios(data) {
     logger.info(`Iniciamos la función crearUsuarios ${JSON.stringify(data)}`);
     const {
       nombre: Nombre,
-      apellido: Apellido,
+      apellidoPaterno: ApellidoPaterno,
+      apellidoMaterno: ApellidoMaterno,
       email: Email,
       area: Area,
       rol: Rol,
@@ -38,7 +40,8 @@ async function crearUsuarios(data) {
     // Verificación de parámetros requeridos
     const requiredParams = {
       Nombre,
-      Apellido,
+      ApellidoPaterno,
+      ApellidoMaterno,
       Email,
       Area,
       Rol,
@@ -77,7 +80,8 @@ async function crearUsuarios(data) {
     // Ejecutar el procedimiento almacenado con los parámetros
     const result = await request
       .input('Nombre', sql.VarChar(50), Nombre)
-      .input('Apellido', sql.VarChar(50), Apellido)
+      .input('ApellidoPaterno', sql.VarChar(50), ApellidoPaterno)
+      .input('ApellidoMaterno', sql.VarChar(50), ApellidoMaterno)
       .input('Email', sql.VarChar(100), Email)
       .input('Area', sql.VarChar(50), Area)
       .input('Rol', sql.VarChar(50), Rol)
@@ -120,6 +124,7 @@ async function crearUsuarios(data) {
 
 async function getAllUser() {
   try {
+    
     logger.info(`Iniciamos la función getAllUser services`);
     await connectToDatabase('BodegaMantenedor');
     const request = new sql.Request();
@@ -145,73 +150,70 @@ async function getAllUser() {
 }
 
 async function editUser(data) {
+ 
   let transaction;
   try {
-    console.log('data : ', data);
+    logger.info(`Iniciamos la función editUser ${JSON.stringify(data)}`);
+   
+    const {
+      IdUsuario: UsuarioID,
+      nombre: Nombre,
+      apellidoPaterno: ApellidoPaterno,
+      apellidoMaterno:ApellidoMaterno,
+      email: Email,
+      area: Area,
+      role: Rol,
+      usuarioActivo: Estado,
+      fechaInicio: FechaInicio,
+      fechaFin: FechaFin,
+      usuario: NombreUsuario,
+      
+      
+    } = data;
+    console.log("dataaaa: " , data);
+    
+    
     // Encriptar la contraseña solo si se proporciona
-    let claveHash = data.password
-      ? await bcrypt.hash(data.password, SALT_ROUNDS)
-      : null;
+    let claveHash = data.clave ? await bcrypt.hash(data.clave, SALT_ROUNDS) : null;
     console.log('claveHash : ', claveHash);
+   
+  // Conectar a la base de datos y comenzar la transacción
+  await connectToDatabase('BodegaMantenedor');
+  
+  const request = new sql.Request(transaction); // Pasar la transacción al request
 
-    await connectToDatabase('BodegaMantenedor');
-    // Crear una nueva transacción
-    transaction = new sql.Transaction();
-    await transaction.begin();
-    const request = new sql.Request(transaction); // Usa la transacción en la solicitud
-
-    // Construir la consulta SQL de manera dinámica
-    let query = `
-            UPDATE Usuarios 
-            SET Nombre = @Nombre,
-                Apellido = @Apellido,
-                Email = @Email,
-                Area = @Area,
-                Rol = @Rol,
-                Estado = @Estado,
-                FechaInicio = @FechaInicio,
-                FechaFin = @FechaFin,
-                NombreUsuario = @NombreUsuario,
-                Actividad = @Actividad
-        `;
-
-    // Agregar ClaveHash solo si está definido
-    if (claveHash) {
-      query += `, ClaveHash = @ClaveHash`;
-      request.input('ClaveHash', sql.VarChar, claveHash); // Añadir parámetro para ClaveHash
+  // Ejecutar el procedimiento almacenado con los parámetros
+  const result = await request
+    .input('Nombre', sql.VarChar(50), Nombre)
+    .input('ApellidoPaterno', sql.VarChar(50), ApellidoPaterno)
+    .input('ApellidoMaterno', sql.VarChar(50), ApellidoMaterno)
+    .input('Email', sql.VarChar(100), Email)
+    .input('Area', sql.VarChar(50), Area)
+    .input('Rol', sql.VarChar(50), Rol)
+    .input('Estado', sql.VarChar(20), Estado)
+    .input('FechaInicio', sql.DateTime, formatDate(FechaInicio))
+    .input('FechaFin', sql.DateTime, formatDate(FechaFin))
+    .input('NombreUsuario', sql.VarChar(50), NombreUsuario)
+    .input('ClaveHash', sql.VarChar(256), claveHash)
+    .input('UsuarioID' , sql.Int, UsuarioID)
+    .output('Mensaje', sql.VarChar)
+    .output('StatusID', sql.Int)
+    
+    .execute('Update_Usuario_SP');
+    
+    logger.info(`Fin de la  la función editUser ${JSON.stringify(result)}`);
+    if(result.output.StatusID === 1){
+     
+      return { status: 200, message: result.output.Mensaje , codigoMensaje : result.output.StatusID , dataUsuario : data};
+    }else{
+     
+      return { status: 200, message: result.output.Mensaje , codigoMensaje : result.output.StatusID , dataUsuario: data };
     }
-
-    query += ` WHERE UsuarioID = @UsuarioID`;
-
-    // Añadir todos los parámetros
-    request.input('Nombre', sql.VarChar, data.nombre);
-    request.input('Apellido', sql.VarChar, data.apellido);
-    request.input('Email', sql.VarChar, data.email);
-    request.input('Area', sql.VarChar, data.area);
-    request.input('Rol', sql.VarChar, data.role);
-    request.input('Estado', sql.VarChar, data.usuarioActivo);
-    request.input('FechaInicio', sql.Date, data.fechaInicio);
-    request.input('FechaFin', sql.Date, data.fechaFin);
-    request.input('NombreUsuario', sql.VarChar, data.usuario);
-    request.input('Actividad', sql.VarChar, data.actividad);
-    request.input('UsuarioID', sql.Int, data.IdUsario); // Asume que UsuarioID es un entero
-
-    // Ejecutar la consulta de actualización dentro de la transacción
-    const updateUsers = await request.query(query);
-
-    console.log('updateUser', updateUsers);
-    if (updateUsers.rowsAffected[0] > 0) {
-      await transaction.commit(); // Confirma la transacción si todo va bien
-      return { status: 200, message: 'Usuario actualizado correctamente' };
-    } else {
-      await transaction.rollback(); // Revertir cambios si no se realizó ninguna actualización
-      return {
-        status: 401,
-        error: 'No existen Usuarios o no se realizaron cambios',
-      };
-    }
+    
+    
+    
   } catch (error) {
-    if (transaction) await transaction.rollback(); // Revertir cambios en caso de error
+    
     console.log('error : ', error);
     return { status: 500, error: 'Error en el servidor editUser' };
   } finally {
@@ -239,7 +241,9 @@ async function insertarActividades(actividadList, usuarioID, nombreUsuario) {
   let responseActividad;
   let result;
 
+  console.log("actividadList", actividadList);
   try {
+      
       // Iniciamos la conexión solo una vez
       await connectToDatabase('BodegaMantenedor');
 
@@ -442,6 +446,24 @@ async function replacePasswordId(data) {
   }
 }
 
+async function eliminarActividades(usuarioID) {
+  try {
+
+    await connectToDatabase('BodegaMantenedor');
+    logger.info(`Iniciamos la función eliminarActividades services ${usuarioID}`);
+      const request = new sql.Request();
+      await request
+          .input('UsuarioID', sql.Int, usuarioID)
+          .execute('Eliminar_Actividades_SP'); // Crea este SP para eliminar todas las actividades de un usuario
+
+      logger.info(`Actividades del usuario ${usuarioID} eliminadas correctamente.`);
+
+  } catch (error) {
+      logger.error(`Error al eliminar actividades: ${error.message}`);
+      throw error; // Lanzamos el error para que no continúe si hay un problema
+  }
+}
+
 module.exports = {
   getAllUser,
   crearUsuarios,
@@ -450,5 +472,6 @@ module.exports = {
   deleteUser,
   editUserID,
   replacePasswordId,
-  insertarActividades
+  insertarActividades,
+  eliminarActividades
 };
