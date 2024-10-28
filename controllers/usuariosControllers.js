@@ -79,8 +79,6 @@ async function editUser(req, res) {
     const updateUsers = await usuariosServices.editUser(req.body);
 
     console.log("respuesta desde el procedimiento almacenado" , updateUsers) ;
-   
-    
     if(updateUsers.codigoMensaje === 1){
       
       await usuariosServices.eliminarActividades(updateUsers.dataUsuario.IdUsuario);

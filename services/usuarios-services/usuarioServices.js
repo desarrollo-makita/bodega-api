@@ -33,7 +33,7 @@ async function crearUsuarios(data) {
       fechaInicio: FechaInicio,
       fechaFin: FechaFin,
       nombreUsuario: NombreUsuario,
-      clave: Clave,
+      clave: Clave
       
     } = dataRequest;
 
@@ -253,14 +253,17 @@ async function insertarActividades(actividadList, usuarioID, nombreUsuario) {
       for (const actividad of actividadList) {
           const request = new sql.Request(); // Nueva instancia de request en cada iteración
 
+          const actividadMod =await formatedActividad(actividad);
+          
           result = await request
               .input('UsuarioID', sql.Int, usuarioID)
               .input('NombreUsuario', sql.NVarChar(50), nombreUsuario)
-              .input('NombreActividad', sql.NVarChar(50), actividad.nombreActividad)
-              .input('CodigoActividad', sql.Int, actividad.codigoActividad)
+              .input('NombreActividad', sql.NVarChar(50), actividadMod.nombreActividad)
+              .input('Ruta', sql.NVarChar(50), actividadMod.ruta)
+              .input('CodigoActividad', sql.Int, actividadMod.codigoActividad)
               .execute('Insertar_Actividad_SP'); // Asegúrate de usar await aquí
 
-          logger.info(`Actividad ${actividad.nombreActividad} insertada correctamente.`);
+          logger.info(`Actividad ${actividadMod.nombreActividad} insertada correctamente.`);
       }
 
       responseActividad = result;
@@ -273,6 +276,42 @@ async function insertarActividades(actividadList, usuarioID, nombreUsuario) {
   }
 }
 
+
+async function formatedActividad(actividad){
+  let ruta = '';
+  
+  switch (actividad.nombreActividad) {
+      case 'Inventario':
+      ruta = 'inventario/';
+      break;
+    case 'Ubicacion':
+      ruta = 'ubicacion/';
+      break;
+    case 'Almacenamiento':
+      ruta = 'almacenamiento/';
+      break;
+    case 'Etiquetado':
+      ruta = 'etiquetado/';
+      break;
+    case 'Packing':
+      ruta = 'packing/';
+      break;
+    case 'Picking':
+      ruta = 'picking/';
+      break;
+    
+    default:
+        ruta = ''; // Ruta por defecto si no hay coincidencias
+        break;
+  }
+
+  // Devuelve un nuevo objeto que incluye la ruta
+  return {
+      ...actividad, // Copia las propiedades existentes
+      ruta: ruta
+  };
+
+}
 
 /**
  * Traemos el usuario desde la base de datos

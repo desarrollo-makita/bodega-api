@@ -16,6 +16,7 @@ const {recuperarPassword , replacePassword} = require('../controllers/recuperarP
 const {insertarInfo} = require('../controllers/insertarInfoDispositivoControllers')
 const {getAllareas , deletetArea , insertarArea} = require('../controllers/areasControllers');
 const {getAllActividades , getActividadId} = require('../controllers/actividadesControllers');
+const{insertarRegistroUbicacion , obtenerUbicacionFecha} = require('../controllers/insertarRegistroUbicacionControllers')
 
 
 // endpoint de usuarios
@@ -38,6 +39,8 @@ router.get('/get-all-menu', verifyToken, getAllMenu);
 // endpoint ubicaciones
 router.get('/obtener-ubicacion/:item', obtenerUbicacionItem);
 router.put('/actualiza-ubicacion/', actualizaUbicacion);
+router.post('/insertar-registro-ubicacion', insertarRegistroUbicacion);
+router.get('/obtener-bitacora-ubicacion-fecha/:fecha', obtenerUbicacionFecha);// bitacora ubicaciones
 
 // guarda info dispositivo
 router.post('/insertar-info-dispositivo', insertarInfo);

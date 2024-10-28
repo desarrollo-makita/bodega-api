@@ -20,8 +20,8 @@ async function login(req, res) {
 
     const login = await loginServices.loginServices(data);
     console.log('loginResponse :;', login);
-    if (login.status === 401) {
-      res.status(401).json({ error: login.error });
+    if (login.status != 200) {
+      res.status(login.status).json({ error: login.error });
     } else {
       // Validar las fechas de inicio y fin
       const { FechaInicio, FechaFin , UsuarioID } = login.data;
@@ -47,10 +47,11 @@ async function login(req, res) {
 
       const token = generateToken(login, vigencia);
       
-      if (login.data.Rol === 'Administrador') {
+      
+      if (login.data.Rol === 'Administrador' || login.data.Rol === 'Operario') {
         showMenu = await menuServices.getAllMenuService();
         showActividades = await actividadServices.getActividadesUsuarioId(idUsuario);
-      } else {
+      } else if(login.data.Rol === 'Consulta') {
         showMenu = await menuServices.perfilConsulta();
       }
 
