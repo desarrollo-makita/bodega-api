@@ -17,7 +17,7 @@ const {insertarInfo} = require('../controllers/insertarInfoDispositivoController
 const {getAllareas , deletetArea , insertarArea} = require('../controllers/areasControllers');
 const {getAllActividades , getActividadId} = require('../controllers/actividadesControllers');
 const{insertarRegistroUbicacion , obtenerUbicacionFecha} = require('../controllers/insertarRegistroUbicacionControllers')
-
+const {getListadoPicking , getPickingFolio} = require('../controllers/listadoPickingControllers');
 
 // endpoint de usuarios
 router.post('/crear-usuarios', crearUsuarios);
@@ -53,5 +53,11 @@ router.post('/insertar-nueva-area', insertarArea);
 // Endpoint para mantenedor de Actividades
 router.get('/get-all-actividades' , getAllActividades)
 router.get('/get-actividad-id/:idActividad' , getActividadId)
+
+//Listado de picking , proceso captura de serie Por numero Folio
+router.get('/get-all-pickingList' , getListadoPicking )
+router.get('/get-picking-folio/:folio' , getPickingFolio )
+
+
 
 module.exports = router;
