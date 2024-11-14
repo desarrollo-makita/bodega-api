@@ -17,7 +17,8 @@ const {insertarInfo} = require('../controllers/insertarInfoDispositivoController
 const {getAllareas , deletetArea , insertarArea} = require('../controllers/areasControllers');
 const {getAllActividades , getActividadId} = require('../controllers/actividadesControllers');
 const{insertarRegistroUbicacion , obtenerUbicacionFecha} = require('../controllers/insertarRegistroUbicacionControllers')
-const {getListadoPicking , getPickingFolio} = require('../controllers/listadoPickingControllers');
+const {getListadoPicking , getPickingFolio , getPickingFolioDetalle} = require('../controllers/capturadorSerie/listadoPickingControllers');
+
 
 // endpoint de usuarios
 router.post('/crear-usuarios', crearUsuarios);
@@ -25,7 +26,7 @@ router.put('/editar-usuarios', verifyToken, editUser);
 router.get('/get-all-users', verifyToken, getAllUsers);
 router.get('/get-nombre-usuario', getUserName);
 router.delete('/delete-usuario', verifyToken, deletetUser);
-router.put('/editar-usuarios-id', verifyToken, editUserID); // reisar endpoint al parecer no esta siendo utiñlizado
+router.put('/editar-usuarios-id', verifyToken, editUserID);
 
 // endpoint login
 router.post('/login', login);
@@ -57,6 +58,8 @@ router.get('/get-actividad-id/:idActividad' , getActividadId)
 //Listado de picking , proceso captura de serie Por numero Folio
 router.get('/get-all-pickingList' , getListadoPicking )
 router.get('/get-picking-folio/:folio' , getPickingFolio )
+router.get('/get-picking-correlativo-detalle/:correlativo' , getPickingFolioDetalle )
+
 
 
 
