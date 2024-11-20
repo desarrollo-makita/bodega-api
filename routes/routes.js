@@ -18,6 +18,7 @@ const {getAllareas , deletetArea , insertarArea} = require('../controllers/areas
 const {getAllActividades , getActividadId} = require('../controllers/actividadesControllers');
 const{insertarRegistroUbicacion , obtenerUbicacionFecha} = require('../controllers/insertarRegistroUbicacionControllers')
 const {getListadoPicking , getPickingFolio , getPickingFolioDetalle} = require('../controllers/capturadorSerie/listadoPickingControllers');
+const {updateEnProcesoCaptura  , insertarCapturas} = require('../controllers/capturadorSerie/updateCapturaSerieControllers');
 
 
 // endpoint de usuarios
@@ -59,6 +60,10 @@ router.get('/get-actividad-id/:idActividad' , getActividadId)
 router.get('/get-all-pickingList' , getListadoPicking )
 router.get('/get-picking-folio/:folio' , getPickingFolio )
 router.get('/get-picking-correlativo-detalle/:correlativo' , getPickingFolioDetalle )
+
+//actualiza estado de captura enProceso y procesado
+router.put('/actualiza-glosa-enproceso/', updateEnProcesoCaptura);
+router.post('/insertar-datos-capturados', insertarCapturas);
 
 
 

@@ -8,7 +8,7 @@ async function insertarRegistroUbicacion(req, res) {
     try {
         // Obtener el ID de la URL
        
-        const { usuario , item,fechaCambio,tipoItem,ubicacionAntigua,nuevaUbicacion} = req.body
+        const { usuario , item,fechaCambio,tipoItem,ubicacionAntigua,nuevaUbicacion, operacion} = req.body
         
         // Conectar a la base de datos
         await connectToDatabase("BodegaMantenedor");    
@@ -22,6 +22,7 @@ async function insertarRegistroUbicacion(req, res) {
         request.input('TipoItem', sql.VarChar(50), tipoItem);
         request.input('UbicacionAntigua', sql.VarChar(100), ubicacionAntigua);
         request.input('NuevaUbicacion', sql.VarChar(100), nuevaUbicacion);
+        request.input('Operacion', sql.VarChar(100), operacion);
 
         // Ejecutar el procedimiento almacenado
         const result = await request.execute('Insertar_CambioUbicacion_SP');

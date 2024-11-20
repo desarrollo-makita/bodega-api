@@ -9,7 +9,7 @@ async function obtenerUbicacionItem(req, res) {
         // Obtener el ID de la URL
         const { item } = req.params;
 
-        await connectToDatabase('DTEBdQMakita');
+        await connectToDatabase('BdQMakita');
         // Construir la consulta utilizando el item como filtro
         const consulta = `SELECT texto2 AS Ubicacion, descripcion, item, tipoItem 
             FROM Item 

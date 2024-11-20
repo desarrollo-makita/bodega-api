@@ -7,7 +7,6 @@ async function sendEmailWithDB(data) {
          
          await connectToDatabase('BdQMakita');
        
-        console.log("dataaaaaaaaaaa : ", data);
         const request = new sql.Request(); // Nueva instancia de request en cada iteración
         let currentDate = new Date();
         let formattedDate = `${currentDate.getDate()}/${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
