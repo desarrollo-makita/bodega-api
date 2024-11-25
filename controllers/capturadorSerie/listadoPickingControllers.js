@@ -16,8 +16,11 @@ const pickingService = require('../../services/listado-picking-services/listadoP
  */
 async function getListadoPicking(req, res) {
   try {
-    logger.info(`Iniciamos la función getListadoPicking controllers`);
-    const responsePickingList = await pickingService.getPickingList();
+    console.log("variable desde kotlin" , req.params)
+    logger.info(`Iniciamos la función getListadoPicking controllers ${JSON.stringify(req.params)}`);
+    
+    let area = req.params.area;
+    const responsePickingList = await pickingService.getPickingList(area);
 
     if (responsePickingList.status != 200) {
       res.status(404).json({ error: responsePickingList.error });

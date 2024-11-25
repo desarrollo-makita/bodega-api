@@ -19,7 +19,7 @@ const {getAllActividades , getActividadId} = require('../controllers/actividades
 const{insertarRegistroUbicacion , obtenerUbicacionFecha} = require('../controllers/insertarRegistroUbicacionControllers')
 const {getListadoPicking , getPickingFolio , getPickingFolioDetalle} = require('../controllers/capturadorSerie/listadoPickingControllers');
 const {updateEnProcesoCaptura  , insertarCapturas} = require('../controllers/capturadorSerie/updateCapturaSerieControllers');
-
+const {obtenerHerramienta} = require('../controllers/generarEtiqueta/generarEtiquetaControllers')
 
 // endpoint de usuarios
 router.post('/crear-usuarios', crearUsuarios);
@@ -57,13 +57,16 @@ router.get('/get-all-actividades' , getAllActividades)
 router.get('/get-actividad-id/:idActividad' , getActividadId)
 
 //Listado de picking , proceso captura de serie Por numero Folio
-router.get('/get-all-pickingList' , getListadoPicking )
+router.get('/get-all-pickingList/:area' , getListadoPicking )
 router.get('/get-picking-folio/:folio' , getPickingFolio )
 router.get('/get-picking-correlativo-detalle/:correlativo' , getPickingFolioDetalle )
 
 //actualiza estado de captura enProceso y procesado
 router.put('/actualiza-glosa-enproceso/', updateEnProcesoCaptura);
 router.post('/insertar-datos-capturados', insertarCapturas);
+
+//Herramientas
+router.get('/generar-etiquetaC/:Item', obtenerHerramienta);
 
 
 
