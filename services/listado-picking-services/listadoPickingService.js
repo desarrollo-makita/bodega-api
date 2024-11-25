@@ -84,7 +84,7 @@ const listaPicking = await request.query(query);
 async function getPickingFolio(folio) {
   try {
     logger.info(`Iniciamos la función getPickingFolio services`);
-    await connectToDatabase('DTEBdQMakita');
+    await connectToDatabase('BdQMakita');
     const request = new sql.Request();
 
     // Buscar el la acividad por NombreActividad
@@ -158,7 +158,7 @@ async function getPickingFolio(folio) {
 async function getPickingFolioDetalle(correlativo) {
   try {
     logger.info(`Iniciamos la función getPickingFolioDetalle services`);
-    await connectToDatabase('DTEBdQMakita');
+    await connectToDatabase('BdQMakita');
     const request = new sql.Request();
 
     // Buscar el la acividad por NombreActividad
