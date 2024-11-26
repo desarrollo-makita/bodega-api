@@ -165,35 +165,42 @@ async function getPickingFolio(folio) {
 }
 
 
-async function getPickingFolioDetalle(correlativo) {
+async function getPickingFolioDetalle(correlativo , tipoItem) {
   try {
+    console.log(correlativo)
+console.log(tipoItem)
     logger.info(`Iniciamos la función getPickingFolioDetalle services`);
     await connectToDatabase('BdQMakita');
     const request = new sql.Request();
 
     // Buscar el la acividad por NombreActividad
-    const  pickingFolioDetalle = await request.query(`SELECT 
-                                                          linea, 
-                                                          item, 
-                                                          Descripcion, 
-                                                          CAST(ROUND(cantidad, 0) AS INT) AS Cantidad, 
-                                                          CAST(ROUND(CantidadPedida, 0) AS INT) AS CantidadPedida, 
-                                                          TipoDocumento, 
-                                                          Tipoitem, 
-                                                          Unidad, 
-                                                          Ubicacion 
-                                                      FROM 
-                                                          CapturaDet 
-                                                      WHERE 
-                                                          empresa = 'Makita' 
-                                                          AND Tipodocumento = 'PICKING' 
-                                                          AND correlativo = ${correlativo}
-                                                        -- AND tipoitem = @axTipoItem 
-                                                      ORDER BY 
-                                                          Ubicacion, 
-                                                          linea; `);
-                                              
-    
+    const  query = `
+      SELECT 
+        linea, 
+        item, 
+        Descripcion, 
+        CAST(ROUND(cantidad, 0) AS INT) AS Cantidad, 
+        CAST(ROUND(CantidadPedida, 0) AS INT) AS CantidadPedida, 
+        TipoDocumento, 
+        Tipoitem, 
+        Unidad, 
+        Ubicacion 
+    FROM 
+        CapturaDet 
+    WHERE 
+        empresa = 'Makita' 
+        AND Tipodocumento = 'PICKING' 
+        AND correlativo = ${correlativo}
+        AND tipoitem = '${tipoItem}'
+    ORDER BY 
+        Ubicacion, 
+        linea; `;
+                                                  
+    // Muestra el query en la consola
+console.log("Query ejecutado:", query);
+
+// Ejecuta el query
+const pickingFolioDetalle = await request.query(query);
     
 
     console.log("resultado PickingFolio : " ,pickingFolioDetalle );
@@ -209,7 +216,7 @@ async function getPickingFolioDetalle(correlativo) {
       if (item.Direccion) {
         // Reemplaza el # por una cadena vacía
         item.Direccion = item.Direccion.replace('#', '').trim();
-        console.log("WWWWWWWWWWWWWWWWWWWWW : ", item.Direccion);
+        
       }
     });
 

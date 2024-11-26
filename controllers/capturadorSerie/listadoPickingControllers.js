@@ -67,14 +67,25 @@ async function getPickingFolio(req, res) {
 }
 
 async function getPickingFolioDetalle(req, res) {
-    try {
+    
+  let tipoItem;
+  try {
      
-      const { correlativo } = req.params;
+      const { correlativo, area } = req.params;
       
       let correl = correlativo
+     
+console.log(correl)
+console.log(area)
+
+      if (area ===  'Herramientas'){
+        tipoItem = '01-HERRAMIENTAS'
+      }else if(area === 'Accesorios'){
+        tipoItem = '03-ACCESORIOS'
+      }
       
       logger.info(`Iniciamos la función getPickingFolioDetalle controllers con Folio ${correl}`);
-      const responsePickingFolio= await pickingService.getPickingFolioDetalle(correl);
+      const responsePickingFolio= await pickingService.getPickingFolioDetalle(correl, tipoItem);
                                                     
       if (responsePickingFolio.status != 200) {
         res.status(404).json({ error: responsePickingFolio.error });

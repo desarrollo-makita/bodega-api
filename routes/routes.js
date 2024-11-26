@@ -60,7 +60,7 @@ router.get('/get-actividad-id/:idActividad' , getActividadId)
 //Listado de picking , proceso captura de serie Por numero Folio
 router.get('/get-all-pickingList/:area' , getListadoPicking )
 router.get('/get-picking-folio/:folio' , getPickingFolio )
-router.get('/get-picking-correlativo-detalle/:correlativo' , getPickingFolioDetalle )
+router.get('/get-picking-correlativo-detalle/:correlativo/:area' , getPickingFolioDetalle )
 
 //actualiza estado de captura enProceso y procesado
 router.put('/actualiza-glosa-enproceso/', updateEnProcesoCaptura);
