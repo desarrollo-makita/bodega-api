@@ -74,10 +74,6 @@ async function getPickingFolioDetalle(req, res) {
       const { correlativo, area } = req.params;
       
       let correl = correlativo
-     
-console.log(correl)
-console.log(area)
-
       if (area ===  'Herramientas'){
         tipoItem = '01-HERRAMIENTAS'
       }else if(area === 'Accesorios'){

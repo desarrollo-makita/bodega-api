@@ -65,12 +65,16 @@ console.log("Query ejecutado:", query);
 // Ejecuta el query
 const listaPicking = await request.query(query);
       
-                            
     if (listaPicking.recordset.length === 0) {
       return { status: 404, error: 'No existen picking para mostrar' };
     }
 
-    const responsePickingList = listaPicking.recordset;
+    const responsePickingList = listaPicking.recordset.filter(item => item.Total_Items !== 0);
+
+    if (responsePickingList.length === 0) {
+      return { status: 404, error: 'No existen picking con Total_Items mayor a 0' };
+    }
+    
     responsePickingList.forEach(item => {
       
       if (item.Direccion) {
