@@ -12,14 +12,15 @@ const {
 const { login, validaClaveActual } = require('../controllers/login');
 const { getAllMenu } = require('../controllers/menu');
 const {obtenerUbicacionItem,actualizaUbicacion} = require('../controllers/obtenerUbicacionControllers');
-const {recuperarPassword , replacePassword} = require('../controllers/recuperarPasswordControllers')
-const {insertarInfo} = require('../controllers/insertarInfoDispositivoControllers')
+const {recuperarPassword , replacePassword} = require('../controllers/recuperarPasswordControllers');
+const {insertarInfo} = require('../controllers/insertarInfoDispositivoControllers');
 const {getAllareas , deletetArea , insertarArea} = require('../controllers/areasControllers');
 const {getAllActividades , getActividadId} = require('../controllers/actividadesControllers');
-const{insertarRegistroUbicacion , obtenerUbicacionFecha} = require('../controllers/insertarRegistroUbicacionControllers')
+const{insertarRegistroUbicacion , obtenerUbicacionFecha} = require('../controllers/insertarRegistroUbicacionControllers');
 const {getListadoPicking , getPickingFolio , getPickingFolioDetalle} = require('../controllers/capturadorSerie/listadoPickingControllers');
 const {updateEnProcesoCaptura  , insertarCapturas} = require('../controllers/capturadorSerie/updateCapturaSerieControllers');
-const {obtenerHerramienta} = require('../controllers/generarEtiqueta/generarEtiquetaControllers')
+const {obtenerHerramienta} = require('../controllers/generarEtiqueta/generarEtiquetaControllers');
+const {obtenerStock} = require('../controllers/obtenerStock/obtenerStockControllers');
 
 // endpoint de usuarios
 router.post('/crear-usuarios', crearUsuarios);
@@ -68,7 +69,7 @@ router.post('/insertar-datos-capturados', insertarCapturas);
 //Herramientas
 router.get('/generar-etiquetaC/:Item', obtenerHerramienta);
 
-
-
+//Consulta stock por item bodega 02
+router.get('/consultar-stock-item/:item', obtenerStock);
 
 module.exports = router;

@@ -3,10 +3,17 @@ const {connectToDatabase,closeDatabaseConnection} = require('../../config/databa
 const logger = require('../../config/logger.js');
 
 async function getPickingList(area) {
+  let tipoItem;
   try {
     logger.info(`Iniciamos la función getPickingList services`);
     await connectToDatabase('BdQMakita');
     const request = new sql.Request();
+
+    if (area ===  'Herramientas'){
+      tipoItem = '01-HERRAMIENTAS'
+    }else if(area === 'Accesorios'){
+      tipoItem = '03-ACCESORIOS'
+    }
 
     // Buscar el la acividad por NombreActividad
     const query = `
@@ -44,9 +51,12 @@ async function getPickingList(area) {
         AND b.empresa = i.Empresa
         AND b.Tipoitem = i.TipoItem
         AND b.item = i.item
-        AND a.Correlativo = d.Correlativo
+		And a.empresa = d.empresa
+		and a.DocumentoOrigen= d.TipoDocumento
+		AND a.CorrelativoOrigen = d.Correlativo
         AND i.Clasif1 = '${area}'
-    ORDER BY d.Fecha ASC;
+		and b.Tipoitem = '${tipoItem}' 
+		ORDER BY d.Fecha ASC;
 `;
 
 // Muestra el query en la consola
@@ -62,7 +72,7 @@ const listaPicking = await request.query(query);
 
     const responsePickingList = listaPicking.recordset;
     responsePickingList.forEach(item => {
-      console.log(item.Direccion);
+      
       if (item.Direccion) {
         // Reemplaza el # por una cadena vacía
         item.Direccion = item.Direccion.replace('#', '').trim();

@@ -24,7 +24,7 @@ async function obtenerHerramienta(req, res) {
         
         const result = await sql.query(consulta);
         logger.info(`Resultado de la consulta:   - ${JSON.stringify(result)}`);
-console.log("salida",result.recordset)
+        console.log("salida",result.recordset)
         // Verificar si se encontraron resultados
         if (result.recordset.length > 0) {
             // Responder con el resultado en formato JSON
