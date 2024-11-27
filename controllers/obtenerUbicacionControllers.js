@@ -9,7 +9,7 @@ async function obtenerUbicacionItem(req, res) {
         // Obtener el ID de la URL
         const { item } = req.params;
 
-        await connectToDatabase('BdQMakita');
+        await connectToDatabase('DTEBdQMakita');
         // Construir la consulta utilizando el item como filtro
         const consulta = `SELECT texto2 AS Ubicacion, descripcion, item, tipoItem 
             FROM Item 
@@ -53,7 +53,7 @@ async function actualizaUbicacion(req, res) {
             logger.error(`Error faltan parametros de entrada a la solicitud`);
             return res.status(400).json({ error: `Todos los campos son requeridos.` });
         }
-        await connectToDatabase('BdQMakita');
+        await connectToDatabase('DTEBdQMakita');
         
         // Construir la consulta utilizando el item como filtro
         const consulta = `update item set Texto2 = '${nuevaUbicacion}' where Empresa ='${empresa}' and item = '${item}' and TipoItem = '${tipoItem}' `;

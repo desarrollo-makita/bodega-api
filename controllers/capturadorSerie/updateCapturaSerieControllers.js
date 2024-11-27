@@ -108,9 +108,47 @@ async function insertarCapturas(req, res) {
 }
 
 
+async function updateSolicitadoCaptura(req, res) {
+    logger.info(`Iniciamos funcion updateSolicitadoCaptura`);
+    try {
+        
+        console.log(req.body);
+        const { correlativo } = req.body;
+      
+        // Verificar si algún campo está vacío, es null o undefined
+        if (!correlativo) {
+            logger.error(`Error faltan parametros de entrada a la solicitud`);
+            return res.status(400).json({ error: `Todos los campos son requeridos.` });
+        }
+        await connectToDatabase('BodegaMantenedor');
+        transaction = new sql.Transaction();
+        await transaction.begin();
+    
+        const request = new sql.Request(transaction); // Pasar la transacción al request
+    
+        // Ejecutar el procedimiento almacenado con los parámetros
+        const result = await request
+          .input('correlativo', sql.Int, correlativo)
+          .execute('Update_Captura_Solicitado_SP');
+    
+        logger.info(`Fin de la función updateSolicitadoCaptura ${JSON.stringify(result)}`);
+        
+        await transaction.commit();
+        res.status(200).json(result);
+    } catch (error) {
+        // Manejar errores
+        logger.error(`Error al obtener la updateSolicitadoCaptura:, ${error.message}`);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }finally{
+        await closeDatabaseConnection();
+    }
+}
+
+
 
 
 module.exports = {
     updateEnProcesoCaptura,
-    insertarCapturas
+    insertarCapturas,
+    updateSolicitadoCaptura
 };
