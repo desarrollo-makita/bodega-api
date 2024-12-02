@@ -169,16 +169,14 @@ async function getPickingFolio(folio) {
 }
 
 
-async function getPickingFolioDetalle(correlativo , tipoItem) {
+async function getPickingFolioDetalle(correlativo, tipoItem) {
   try {
-    console.log(correlativo)
-console.log(tipoItem)
     logger.info(`Iniciamos la función getPickingFolioDetalle services`);
     await connectToDatabase('BdQMakita');
     const request = new sql.Request();
 
-    // Buscar el la acividad por NombreActividad
-    const  query = `
+    // Definir la consulta inicial
+    let query = `
       SELECT 
         linea, 
         item, 
@@ -189,49 +187,78 @@ console.log(tipoItem)
         Tipoitem, 
         Unidad, 
         Ubicacion 
-    FROM 
+      FROM 
         CapturaDet 
-    WHERE 
+      WHERE 
         empresa = 'Makita' 
         AND Tipodocumento = 'PICKING' 
         AND correlativo = ${correlativo}
         AND tipoitem = '${tipoItem}'
-    ORDER BY 
+      ORDER BY 
         Ubicacion, 
-        linea; `;
-                                                  
+        linea;`;
+
     // Muestra el query en la consola
-console.log("Query ejecutado:", query);
+    console.log("Query ejecutado:", query);
 
-// Ejecuta el query
-const pickingFolioDetalle = await request.query(query);
-    
+    // Ejecuta el primer query
+    let pickingFolioDetalle = await request.query(query);
 
-    console.log("resultado PickingFolio : " ,pickingFolioDetalle );
-    
+    if (pickingFolioDetalle.recordset.length === 0) {
+      console.log("No se encontraron resultados con el primer criterio, intentando con otro...");
+
+      // Redefinir el query para el segundo criterio
+      query = `
+         SELECT 
+        linea, 
+        item, 
+        Descripcion, 
+        CAST(ROUND(cantidad, 0) AS INT) AS Cantidad, 
+        CAST(ROUND(CantidadPedida, 0) AS INT) AS CantidadPedida, 
+        TipoDocumento, 
+        Tipoitem, 
+        Unidad, 
+        Ubicacion 
+      FROM 
+        CapturaDet 
+      WHERE 
+        empresa = 'Makita' 
+        AND Tipodocumento = 'PICKING' 
+        AND correlativo = ${correlativo}
+        AND tipoitem LIKE '%KIT%'
+      ORDER BY 
+        Ubicacion, 
+        linea;`;
+
+      console.log("Query ejecutado con nuevo criterio:", query);
+
+      // Ejecuta el segundo query
+      pickingFolioDetalle = await request.query(query);
+    }
+
+
     if (pickingFolioDetalle.recordset.length === 0) {
       return { status: 404, error: 'No existen picking para mostrar' };
     }
 
-    const responsePickingFolio= pickingFolioDetalle.recordset;
+    const responsePickingFolio = pickingFolioDetalle.recordset;
 
     responsePickingFolio.forEach(item => {
-      console.log(item.Direccion);
       if (item.Direccion) {
         // Reemplaza el # por una cadena vacía
         item.Direccion = item.Direccion.replace('#', '').trim();
-        
       }
     });
 
-    return { status: 200, data: responsePickingFolio};
+    return { status: 200, data: responsePickingFolio };
   } catch (error) {
-    console.log("error : " , error);
-      return { status: 500, error: 'Error en el servidor getPickingFolio' };
+    console.error("error:", error);
+    return { status: 500, error: 'Error en el servidor getPickingFolio' };
   } finally {
-      await closeDatabaseConnection();
+    await closeDatabaseConnection();
   }
 }
+
 
 module.exports = {
   getPickingList,
