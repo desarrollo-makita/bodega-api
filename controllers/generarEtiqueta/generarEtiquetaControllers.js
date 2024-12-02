@@ -1,5 +1,6 @@
 const sql = require('mssql');
 const logger = require('../../config/logger');
+const {connectToDatabase,closeDatabaseConnection} = require('../../config/database.js');
 
 async function obtenerHerramienta(req, res) {
     
@@ -8,7 +9,7 @@ async function obtenerHerramienta(req, res) {
         // Obtener el ID de la URL
         const  item = req.params.Item.trim();
 
-
+        await connectToDatabase('BdQMakita');
         // Construir la consulta 
         const consulta = ` select distinct b.item, b.descripcion,a.CodigoChile1
                          from HerramientasCargador a
@@ -40,6 +41,9 @@ async function obtenerHerramienta(req, res) {
         // Manejar errores
         logger.error(`Error obtenerHerramienta: ${error.message}`);
         res.status(500).json({ Advertencia: "Error interno del servidor 2" });
+    }finally
+    {
+        await closeDatabaseConnection();
     }
 }
 
