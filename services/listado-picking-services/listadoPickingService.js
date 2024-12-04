@@ -3,21 +3,14 @@ const {connectToDatabase,closeDatabaseConnection} = require('../../config/databa
 const logger = require('../../config/logger.js');
 
 async function getPickingList(area) {
-  let tipoItem;
+ 
   try {
     logger.info(`Iniciamos la función getPickingList services`);
     await connectToDatabase('BdQMakita');
     const request = new sql.Request();
-
-    if (area ===  'Herramientas'){
-      tipoItem = '01-HERRAMIENTAS'
-    }else if(area === 'Accesorios'){
-      tipoItem = '03-ACCESORIOS'
-    }
-
     // Buscar el la acividad por NombreActividad
     const query = `
-    SELECT DISTINCT 
+     SELECT DISTINCT 
         a.empresa,
         a.correlativo,
         a.entidad,
@@ -30,20 +23,23 @@ async function getPickingList(area) {
         a.DocumentoOrigen,
         a.CorrelativoOrigen,
         a.glosa,
+		    a.proceso,
         d.Fecha,
+		    i.clasif1,
+		    b.Tipoitem,
         (SELECT COUNT(*) 
          FROM CapturaDet x 
          WHERE x.empresa = a.empresa 
            AND x.Tipodocumento = a.TipoDocumento 
            AND x.correlativo = a.correlativo 
            AND x.proceso = a.proceso) AS Total_Items
-    FROM 
+      FROM 
         Captura a,
         capturadet b,
         item i,
         Documento d
-    WHERE 
-        a.proceso in ('Solicitado','EnProceso')
+      WHERE 
+        a.proceso  = 'Solicitado'
         AND a.Tipodocumento = 'PICKING'
         AND a.empresa = b.empresa
         AND a.Tipodocumento = b.Tipodocumento
@@ -51,19 +47,17 @@ async function getPickingList(area) {
         AND b.empresa = i.Empresa
         AND b.Tipoitem = i.TipoItem
         AND b.item = i.item
-		And a.empresa = d.empresa
-		and a.DocumentoOrigen= d.TipoDocumento
-		AND a.CorrelativoOrigen = d.Correlativo
-        AND i.Clasif1 = '${area}'
-		and b.Tipoitem = '${tipoItem}' 
-		ORDER BY d.Fecha ASC;
+        And a.empresa = d.empresa
+        and a.DocumentoOrigen= d.TipoDocumento
+        AND a.CorrelativoOrigen = d.Correlativo
+        ORDER BY d.Fecha ASC
 `;
 
-// Muestra el query en la consola
-console.log("Query ejecutado:", query);
+  // Muestra el query en la consola
+  console.log("Query ejecutado:", query);
 
-// Ejecuta el query
-const listaPicking = await request.query(query);
+  // Ejecuta el query
+  const listaPicking = await request.query(query);
       
     if (listaPicking.recordset.length === 0) {
       return { status: 404, error: 'No existen picking para mostrar' };
