@@ -4,7 +4,6 @@ const logger = require('../../config/logger.js');
 
 async function getPickingList(area) {
  
-  console.log("area CLASIF1" , area);
   try {
     logger.info(`Iniciamos la función getPickingList services`);
     await connectToDatabase('BdQMakita');
