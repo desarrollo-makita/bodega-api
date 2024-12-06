@@ -81,7 +81,7 @@ async function getPickingFolioDetalle(req, res) {
       }
       
       logger.info(`Iniciamos la función getPickingFolioDetalle controllers con Folio ${correl}`);
-      const responsePickingFolio= await pickingService.getPickingFolioDetalle(correl, tipoItem);
+      const responsePickingFolio= await pickingService.getPickingFolioDetalle(correl, tipoItem, area);
                                                     
       if (responsePickingFolio.status != 200) {
         res.status(404).json({ error: responsePickingFolio.error });

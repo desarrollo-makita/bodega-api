@@ -163,7 +163,7 @@ async function getPickingFolio(folio) {
 }
 
 
-async function getPickingFolioDetalle(correlativo, tipoItem) {
+async function getPickingFolioDetalle(correlativo, tipoItem, area) {
   try {
     logger.info(`Iniciamos la función getPickingFolioDetalle services`);
     await connectToDatabase('BdQMakita');
@@ -232,7 +232,7 @@ async function getPickingFolioDetalle(correlativo, tipoItem) {
 
 
     if (pickingFolioDetalle.recordset.length === 0) {
-      return { status: 404, error: 'No existen picking para mostrar' };
+      return { status: 404, error: `No existen Item de ${area} para mostrar` };
     }
 
     const responsePickingFolio = pickingFolioDetalle.recordset;
