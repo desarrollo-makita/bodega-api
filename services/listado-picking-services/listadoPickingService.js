@@ -4,6 +4,7 @@ const logger = require('../../config/logger.js');
 
 async function getPickingList(area) {
  
+  console.log("area CLASIF1" , area);
   try {
     logger.info(`Iniciamos la función getPickingList services`);
     await connectToDatabase('BdQMakita');
@@ -50,36 +51,37 @@ async function getPickingList(area) {
         And a.empresa = d.empresa
         and a.DocumentoOrigen= d.TipoDocumento
         AND a.CorrelativoOrigen = d.Correlativo
+        AND i.Clasif1 = '${area}'
         ORDER BY d.Fecha ASC
 `;
 
-  // Muestra el query en la consola
-  console.log("Query ejecutado:", query);
+      // Muestra el query en la consola
+      console.log("Query ejecutado:", query);
 
-  // Ejecuta el query
-  const listaPicking = await request.query(query);
+      // Ejecuta el query
+      const listaPicking = await request.query(query);
       
-    if (listaPicking.recordset.length === 0) {
-      return { status: 404, error: 'No existen picking para mostrar' };
-    }
-
-    const responsePickingList = listaPicking.recordset.filter(item => item.Total_Items !== 0);
-
-    if (responsePickingList.length === 0) {
-      return { status: 404, error: 'No existen picking con Total_Items mayor a 0' };
-    }
-    
-    responsePickingList.forEach(item => {
-      
-      if (item.Direccion) {
-        // Reemplaza el # por una cadena vacía
-        item.Direccion = item.Direccion.replace('#', '').trim();
-        
+      if (listaPicking.recordset.length === 0) {
+        return { status: 404, error: 'No existen picking para mostrar' };
       }
-    });
+
+      const responsePickingList = listaPicking.recordset.filter(item => item.Total_Items !== 0);
+
+      if (responsePickingList.length === 0) {
+        return { status: 404, error: 'No existen picking con Total_Items mayor a 0' };
+      }
+    
+      responsePickingList.forEach(item => {
+        
+        if (item.Direccion) {
+          // Reemplaza el # por una cadena vacía
+          item.Direccion = item.Direccion.replace('#', '').trim();
+          
+        }
+      });
     
 
-    return { status: 200, data: responsePickingList };
+      return { status: 200, data: responsePickingList };
   } catch (error) {
     console.log("error : " , error);
       return { status: 500, error: 'Error en el servidor getPickingList' };
