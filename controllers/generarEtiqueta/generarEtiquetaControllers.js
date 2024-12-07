@@ -9,7 +9,7 @@ async function obtenerHerramienta(req, res) {
         // Obtener el ID de la URL
         const  item = req.params.Item.trim();
 
-        await connectToDatabase('DTEBdQMakita');
+        await connectToDatabase('BdQMakita');
         // Construir la consulta 
         const consulta = ` select distinct b.item, b.descripcion,a.CodigoChile1
                          from HerramientasCargador a
