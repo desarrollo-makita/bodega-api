@@ -8,7 +8,7 @@ async function obtenerStock(req, res) {
     try {
         // Obtener el ID de la URL
         const  item = req.params.item.trim();
-        await connectToDatabase('BdQMakita');
+        await connectToDatabase('DTEBdQMakita');
         // Construir la consulta 
         const consulta = ` SELECT 
                             item.TipoItem, 
