@@ -5,7 +5,7 @@ async function sendEmailWithDB(data) {
     try {
          let body;
          
-         await connectToDatabase('DTEBdQMakita');
+         await connectToDatabase('BdQMakita');
        
         const request = new sql.Request(); // Nueva instancia de request en cada iteración
         let currentDate = new Date();
