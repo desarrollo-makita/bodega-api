@@ -16,10 +16,9 @@ app.use(cors({
   allowedHeaders: 'Content-Type,Authorization',
 }));
 
-// Aumentar límite de tamaño para solicitudes entrantes
-app.use(express.json({ limit: '100mb' })); // Aumenta límite para JSON a 100 MB
-app.use(express.urlencoded({ limit: '100mb', extended: true })); // Aumenta límite para URL-encoded a 100 MB
-
+// Incrementar el límite de tamaño
+app.use(bodyParser.json({ limit: '100mb' })); // Ajusta el tamaño según sea necesario
+app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 // Configurar rutas de la API
 app.use('/api', routes);
 
