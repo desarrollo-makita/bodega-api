@@ -16,7 +16,7 @@ async function obtenerStock(req, res) {
                             DocumentoDet.Bodega, 
                             Sum(
                                 documentodet.cantidad*documentodet.factorinventario) 
-                                as StockFinal, '*' as Ver, '***' as 'Analisis Despacho'
+                                as StockFinal
                             FROM 
                                 Item Item with (nolock)
                                 left JOIN DocumentoDet DocumentoDet with (nolock) ON 

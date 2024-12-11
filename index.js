@@ -9,23 +9,19 @@ const PORT = process.env.PORT || 4000;
 const SECRET_KEY = process.env.SECRET_KEY || 'makita-ti-chile';
 
 app.use(express.json());
-
 // Middleware para habilitar CORS
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Permite cualquier origen
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  next();
-});
+app.use(cors({
+  origin: 'http://localhost:4200', // Ajusta esto según el origen permitido
+  methods: 'GET,POST,OPTIONS',
+  allowedHeaders: 'Content-Type,Authorization',
+}));
 
+// Aumentar límite de tamaño para solicitudes entrantes
+app.use(express.json({ limit: '10mb' })); // Aumenta límite para JSON
+app.use(express.urlencoded({ limit: '10mb', extended: true })); // Aumenta límite para URL-encoded
+
+// Configurar rutas de la API
 app.use('/api', routes);
-app.use(
-  cors({
-    origin: 'http://localhost:4200',
-    methods: 'GET,POST,OPTIONS',
-    allowedHeaders: 'Content-Type,Authorization',
-  })
-);
 
 // Iniciar el servidor después de la conexión a la base de datos
 connectToDatabase()
