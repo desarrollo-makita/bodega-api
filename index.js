@@ -15,6 +15,7 @@ app.use(cors({
   methods: 'GET,POST,OPTIONS',
   allowedHeaders: 'Content-Type,Authorization',
 }));
+const bodyParser = require('body-parser');
 
 // Incrementar el límite de tamaño
 app.use(bodyParser.json({ limit: '100mb' })); // Ajusta el tamaño según sea necesario
