@@ -17,8 +17,8 @@ app.use(cors({
 }));
 
 // Aumentar límite de tamaño para solicitudes entrantes
-app.use(express.json({ limit: '10mb' })); // Aumenta límite para JSON
-app.use(express.urlencoded({ limit: '10mb', extended: true })); // Aumenta límite para URL-encoded
+app.use(express.json({ limit: '100mb' })); // Aumenta límite para JSON a 100 MB
+app.use(express.urlencoded({ limit: '100mb', extended: true })); // Aumenta límite para URL-encoded a 100 MB
 
 // Configurar rutas de la API
 app.use('/api', routes);
