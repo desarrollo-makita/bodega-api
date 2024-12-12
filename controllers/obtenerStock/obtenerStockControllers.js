@@ -27,7 +27,7 @@ async function obtenerStock(req, res) {
                                 and Item.Item='${item}' 
                                 and documento.estado = 'S'
                                 and documentodet.factorinventario <>0
-                                and documentodet.bodega in ('02','15')
+                                and documentodet.bodega in ('02')
                             GROUP BY item.TipoItem, Item.Descripcion, DocumentoDet.Bodega;`;
 
         logger.info(`Query que ejecuta:   - ${consulta}`);
@@ -44,7 +44,7 @@ async function obtenerStock(req, res) {
             res.status(200).json(result.recordset );
         } else {
             // Si no se encontraron resultados, responder con un mensaje
-            res.status(200).json([{Advertencia: "No se encontraron datos"} ] );
+            res.status(404).json(result.recordset );
         }
         logger.info(`Fin de la funcion obtenerHerramienta`);
 
