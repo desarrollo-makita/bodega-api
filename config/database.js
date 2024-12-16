@@ -9,7 +9,9 @@ async function connectToDatabase(databaseName) {
         database: databaseName ,
         options: {
             encrypt: false
-        }
+        },
+        requestTimeout: 60000 // Timeout de 60 segundos
+
     };
 console.log(config);
     try {

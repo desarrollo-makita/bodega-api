@@ -12,7 +12,8 @@ async function obtenerStock(req, res) {
         // Construir la consulta 
         const consulta = ` SELECT 
                             item.TipoItem, 
-                            Item.Descripcion, 
+                            Item.Descripcion,
+                            Item.Texto2 as Ubicacion, 
                             DocumentoDet.Bodega, 
                             Sum(
                                 documentodet.cantidad*documentodet.factorinventario) 
@@ -28,7 +29,7 @@ async function obtenerStock(req, res) {
                                 and documento.estado = 'S'
                                 and documentodet.factorinventario <>0
                                 and documentodet.bodega in ('02')
-                            GROUP BY item.TipoItem, Item.Descripcion, DocumentoDet.Bodega;`;
+                            GROUP BY item.TipoItem, Item.Descripcion, DocumentoDet.Bodega , Item.Texto2;`;
 
         logger.info(`Query que ejecuta:   - ${consulta}`);
 
