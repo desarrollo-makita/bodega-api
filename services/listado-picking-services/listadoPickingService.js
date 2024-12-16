@@ -71,7 +71,7 @@ async function getPickingList(area) {
       }
     
       responsePickingList.forEach(item => {
-        
+       
         if (item.Direccion) {
           // Reemplaza el # por una cadena vacía
           item.Direccion = item.Direccion.replace('#', '').trim();
@@ -165,6 +165,10 @@ async function getPickingFolio(folio) {
 
 
 async function getPickingFolioDetalle(correlativo, tipoItem, area) {
+  
+  let listadoHerramientas;
+  let listadoiAccesorios;
+  
   try {
     logger.info(`Iniciamos la función getPickingFolioDetalle services`);
     await connectToDatabase('BdQMakita');
@@ -188,7 +192,6 @@ async function getPickingFolioDetalle(correlativo, tipoItem, area) {
         empresa = 'Makita' 
         AND Tipodocumento = 'PICKING' 
         AND correlativo = ${correlativo}
-        AND tipoitem = '${tipoItem}'
       ORDER BY 
         Ubicacion, 
         linea;`;
@@ -199,53 +202,21 @@ async function getPickingFolioDetalle(correlativo, tipoItem, area) {
     // Ejecuta el primer query
     let pickingFolioDetalle = await request.query(query);
 
-    if (pickingFolioDetalle.recordset.length === 0) {
-      console.log("No se encontraron resultados con el primer criterio, intentando con otro...");
-
-      // Redefinir el query para el segundo criterio
-      query = `
-         SELECT 
-        linea, 
-        item, 
-        Descripcion, 
-        CAST(ROUND(cantidad, 0) AS INT) AS Cantidad, 
-        CAST(ROUND(CantidadPedida, 0) AS INT) AS CantidadPedida, 
-        TipoDocumento, 
-        Tipoitem, 
-        Unidad, 
-        Ubicacion 
-      FROM 
-        CapturaDet 
-      WHERE 
-        empresa = 'Makita' 
-        AND Tipodocumento = 'PICKING' 
-        AND correlativo = ${correlativo}
-        AND tipoitem LIKE '%KIT%'
-      ORDER BY 
-        Ubicacion, 
-        linea;`;
-
-      console.log("Query ejecutado con nuevo criterio:", query);
-
-      // Ejecuta el segundo query
-      pickingFolioDetalle = await request.query(query);
-    }
-
-
+    console.log("respuesta de la consulta : " , pickingFolioDetalle);
+    
     if (pickingFolioDetalle.recordset.length === 0) {
       return { status: 404, error: `No existen Item de ${area} para mostrar` };
+    
     }
 
+    const { accesorios, herramientasYKits } = await formateoLista(pickingFolioDetalle.recordset);
     const responsePickingFolio = pickingFolioDetalle.recordset;
-
-    responsePickingFolio.forEach(item => {
-      if (item.Direccion) {
-        // Reemplaza el # por una cadena vacía
-        item.Direccion = item.Direccion.replace('#', '').trim();
-      }
-    });
-
-    return { status: 200, data: responsePickingFolio };
+    
+    return { 
+      status: 200, 
+      data: { accesorios, herramientasYKits } 
+    };
+  
   } catch (error) {
     console.error("error:", error);
     return { status: 500, error: 'Error en el servidor getPickingFolio' };
@@ -254,9 +225,30 @@ async function getPickingFolioDetalle(correlativo, tipoItem, area) {
   }
 }
 
+async function formateoLista(listaDetalle) {
+  // Filtrar la lista para "03-ACCESORIOS"
+  const listaAccesorios = listaDetalle.filter(
+    (item) => item.Tipoitem === "03-ACCESORIOS"
+  );
+
+  // Filtrar la lista para "01-HERRAMIENTAS" y tipos que contengan "02-KITS"
+  const listaHerramientasYKits = listaDetalle.filter(
+    (item) => item.Tipoitem === "01-HERRAMIENTAS" || item.Tipoitem.includes("02-KITS")
+  );
+
+  // Retornar ambas listas como un objeto
+  return {
+    accesorios: listaAccesorios,
+    herramientasYKits: listaHerramientasYKits,
+  };
+}
+
+
 
 module.exports = {
   getPickingList,
   getPickingFolio,
   getPickingFolioDetalle
   };
+
+
