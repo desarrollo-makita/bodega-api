@@ -107,6 +107,71 @@ async function insertarCapturas(req, res) {
     }
 }
 
+async function insertarCapturasAccesorios(req, res) {
+    let data = req.body.data;
+    logger.info(`Iniciamos la funcion insertarCapturas ${JSON.stringify(data)}`);
+    let result;
+    let responseData = [];
+
+    try {
+        // Conectarse a la base de datos 'telecontrol'
+        await connectToDatabase("BodegaMantenedor");
+
+        // Armamos data que vamos a mandar al procedimiento almacenado
+        for (const captura of data) {
+            const request = new sql.Request(); // Nueva instancia de request en cada iteración
+
+            const {
+                cantidad,
+                cantidadPedida,
+                correlativo, 
+                descripcion, 
+                empresa,
+                fechaHoraActual, 
+                item, 
+                linea, 
+                serieActual, 
+                tipoDocumento,
+                tipoItem, 
+                ubicacion,
+                unidad, 
+                usuario 
+            } = captura;
+
+            // Ejecutar el procedimiento almacenado con los parámetros correspondientes
+            result = await request
+                .input("Empresa", sql.VarChar(50), empresa)
+                .input("TipoDocumento", sql.VarChar(50), tipoDocumento)
+                .input("Correlativo", sql.Int, parseInt(correlativo))
+                .input("Linea", sql.VarChar(50), linea)
+                .input("TipoItem", sql.VarChar(50), tipoItem)
+                .input("Item", sql.VarChar(50), item)
+                .input("Descripcion", sql.VarChar(255), descripcion)
+                .input("Unidad", sql.VarChar(50), unidad)
+                .input("Cantidad", sql.Int, parseInt(cantidad))
+                .input("CantidadPedida", sql.Int, parseInt(cantidadPedida))
+                .input("SerieActual", sql.VarChar(50), serieActual)
+                .input("Ubicacion", sql.VarChar(50), ubicacion)
+                .input("Proceso", sql.VarChar(50), "Procesado")
+                .input("Usuario", sql.VarChar(50), usuario)
+                .input("FechaHoraActual", sql.DateTime, new Date(fechaHoraActual)) // Convertir la fecha a formato adecuado
+                .execute("InsertCapturaAccesorios");
+
+            responseData.push(result);
+        }
+
+        await closeDatabaseConnection();
+        logger.info(`Fin de la funcion InsertCapturaAccesorios ${JSON.stringify(responseData)}`);
+        res.status(200).json(responseData);
+    } catch (error) {
+        // Manejamos cualquier error ocurrido durante el proceso
+        logger.error(`Error en InsertCapturaAccesorios: ${error.message}`);
+        res.status(500).json({
+            error: `Error en el servidor [insertar-capturas-accesorios-ms]: ${error.message}`,
+        });
+    }
+}
+
 
 async function updateSolicitadoCaptura(req, res) {
     logger.info(`Iniciamos funcion updateSolicitadoCaptura`);
@@ -150,5 +215,6 @@ async function updateSolicitadoCaptura(req, res) {
 module.exports = {
     updateEnProcesoCaptura,
     insertarCapturas,
-    updateSolicitadoCaptura
+    updateSolicitadoCaptura,
+    insertarCapturasAccesorios
 };

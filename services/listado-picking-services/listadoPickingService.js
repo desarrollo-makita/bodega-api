@@ -4,56 +4,105 @@ const logger = require('../../config/logger.js');
 
 async function getPickingList(area) {
  
+  let query;
   try {
     logger.info(`Iniciamos la función getPickingList services`);
     await connectToDatabase('BdQMakita');
     const request = new sql.Request();
     // Buscar el la acividad por NombreActividad
-    const query = `
-     SELECT DISTINCT 
-        a.empresa,
-        a.correlativo,
-        a.entidad,
-        a.nombrecliente,
-        a.Direccion,
-        a.comuna,
-        a.Ciudad,
-        a.Bodorigen,
-        a.Boddestino,
-        a.DocumentoOrigen,
-        a.CorrelativoOrigen,
-        a.glosa,
-		    a.proceso,
-        d.Fecha,
-		    i.clasif1,
-		    b.Tipoitem,
-        (SELECT COUNT(*) 
-         FROM CapturaDet x 
-         WHERE x.empresa = a.empresa 
-           AND x.Tipodocumento = a.TipoDocumento 
-           AND x.correlativo = a.correlativo 
-           AND x.proceso = a.proceso) AS Total_Items
-      FROM 
-        Captura a,
-        capturadet b,
-        item i,
-        Documento d
-      WHERE 
-        a.proceso  = 'Solicitado'
-        AND a.Tipodocumento = 'PICKING'
-        AND a.empresa = b.empresa
-        AND a.Tipodocumento = b.Tipodocumento
-        AND a.Correlativo = b.Correlativo
-        AND b.empresa = i.Empresa
-        AND b.Tipoitem = i.TipoItem
-        AND b.item = i.item
-        And a.empresa = d.empresa
-        and a.DocumentoOrigen= d.TipoDocumento
-        AND a.CorrelativoOrigen = d.Correlativo
-        AND i.Clasif1 = '${area}'
-        ORDER BY d.Fecha ASC
+    if(area.toLowerCase() === 'accesorios'){
+      query = `
+      SELECT DISTINCT 
+          a.empresa,
+          a.correlativo,
+          a.entidad,
+          a.nombrecliente,
+          a.Direccion,
+          a.comuna,
+          a.Ciudad,
+          a.Bodorigen,
+          a.Boddestino,
+          a.DocumentoOrigen,
+          a.CorrelativoOrigen,
+          a.glosa,
+          a.proceso,
+          d.Fecha,
+          i.clasif1,
+          b.Tipoitem,
+          (SELECT COUNT(*) 
+          FROM CapturaDet x 
+          WHERE x.empresa = a.empresa 
+            AND x.Tipodocumento = a.TipoDocumento 
+            AND x.correlativo = a.correlativo 
+            AND x.proceso = a.proceso) AS Total_Items
+        FROM 
+          Captura a,
+          capturadet b,
+          item i,
+          Documento d
+        WHERE 
+          a.proceso  = 'Solicitado'
+          AND a.procesoAccesorios = 'SinProcesar'
+          AND a.Tipodocumento = 'PICKING'
+          AND a.empresa = b.empresa
+          AND a.Tipodocumento = b.Tipodocumento
+          AND a.Correlativo = b.Correlativo
+          AND b.empresa = i.Empresa
+          AND b.Tipoitem = i.TipoItem
+          AND b.item = i.item
+          And a.empresa = d.empresa
+          and a.DocumentoOrigen= d.TipoDocumento
+          AND a.CorrelativoOrigen = d.Correlativo
+          AND i.Clasif1 = '${area}'
+          AND i.TipoItem = '03-ACCESORIOS'
+          ORDER BY d.Fecha ASC
 `;
-
+    }else{
+      query = `
+      SELECT DISTINCT 
+          a.empresa,
+          a.correlativo,
+          a.entidad,
+          a.nombrecliente,
+          a.Direccion,
+          a.comuna,
+          a.Ciudad,
+          a.Bodorigen,
+          a.Boddestino,
+          a.DocumentoOrigen,
+          a.CorrelativoOrigen,
+          a.glosa,
+          a.proceso,
+          d.Fecha,
+          i.clasif1,
+          b.Tipoitem,
+          (SELECT COUNT(*) 
+          FROM CapturaDet x 
+          WHERE x.empresa = a.empresa 
+            AND x.Tipodocumento = a.TipoDocumento 
+            AND x.correlativo = a.correlativo 
+            AND x.proceso = a.proceso) AS Total_Items
+        FROM 
+          Captura a,
+          capturadet b,
+          item i,
+          Documento d
+        WHERE 
+          a.proceso  = 'Solicitado'
+          AND a.Tipodocumento = 'PICKING'
+          AND a.empresa = b.empresa
+          AND a.Tipodocumento = b.Tipodocumento
+          AND a.Correlativo = b.Correlativo
+          AND b.empresa = i.Empresa
+          AND b.Tipoitem = i.TipoItem
+          AND b.item = i.item
+          And a.empresa = d.empresa
+          and a.DocumentoOrigen= d.TipoDocumento
+          AND a.CorrelativoOrigen = d.Correlativo
+          AND i.Clasif1 = '${area}'
+          ORDER BY d.Fecha ASC
+`;
+    }
       // Muestra el query en la consola
       console.log("Query ejecutado:", query);
 
@@ -96,70 +145,71 @@ async function getPickingFolio(folio) {
     await connectToDatabase('BdQMakita');
     const request = new sql.Request();
 
-    // Buscar el la acividad por NombreActividad
-    const  pickingFolio = await request.query(`SELECT DISTINCT 
-                                                a.empresa,
-                                                a.correlativo,
-                                                a.entidad,
-                                                a.nombrecliente,
-                                                a.Direccion,
-                                                a.comuna,
-                                                a.Ciudad,
-                                                a.Bodorigen,
-                                                a.Boddestino,
-                                                a.DocumentoOrigen,
-                                                a.CorrelativoOrigen,
-                                                a.glosa,
-                                                d.Fecha,
-                                                (SELECT COUNT(*) 
-                                                FROM CapturaDet x 
-                                                WHERE x.empresa = a.empresa 
-                                                AND x.Tipodocumento = a.TipoDocumento 
-                                                AND x.correlativo = a.correlativo 
-                                                AND x.proceso = a.proceso) AS Total_Items
-                                                FROM 
-                                                Captura a,
-                                                capturadet b,
-                                                item i,
-                                                Documento d
-                                                WHERE 
-                                                a.proceso = 'Solicitado'
-                                                AND a.Tipodocumento = 'PICKING'
-                                                AND a.empresa = b.empresa
-                                                AND a.Tipodocumento = b.Tipodocumento
-                                                AND a.Correlativo = b.Correlativo
-                                                AND b.empresa = i.Empresa
-                                                AND b.Tipoitem = i.TipoItem
-                                                AND b.item = i.item
-                                                and a.Correlativo = d.Correlativo 
-                                                and a.CorrelativoOrigen like '%${folio}%'
-                                                order by d.Fecha asc `);
-                                              
-    
-    
+    // Construimos la consulta SQL
+    const query = `SELECT DISTINCT 
+                    a.empresa,
+                    a.correlativo,
+                    a.entidad,
+                    a.nombrecliente,
+                    a.Direccion,
+                    a.comuna,
+                    a.Ciudad,
+                    a.Bodorigen,
+                    a.Boddestino,
+                    a.DocumentoOrigen,
+                    a.CorrelativoOrigen,
+                    a.glosa,
+                    d.Fecha,
+                    (SELECT COUNT(*) 
+                     FROM CapturaDet x 
+                     WHERE x.empresa = a.empresa 
+                     AND x.Tipodocumento = a.TipoDocumento 
+                     AND x.correlativo = a.correlativo 
+                     AND x.proceso = a.proceso) AS Total_Items
+                  FROM 
+                    Captura a,
+                    capturadet b,
+                    item i,
+                    Documento d
+                  WHERE 
+                    a.proceso = 'Solicitado'
+                    AND a.Tipodocumento = 'PICKING'
+                    AND a.empresa = b.empresa
+                    AND a.Tipodocumento = b.Tipodocumento
+                    AND a.Correlativo = b.Correlativo
+                    AND b.empresa = i.Empresa
+                    AND b.Tipoitem = i.TipoItem
+                    AND b.item = i.item
+                    AND a.Correlativo = d.Correlativo 
+                    AND a.CorrelativoOrigen like '%${folio}%'
+                  ORDER BY d.Fecha ASC`;
 
-    console.log("resultado PickingFolio : " ,pickingFolio );
-    
+    // Imprimimos la consulta
+    console.log("Consulta SQL generada: ", query);
+
+    // Ejecutamos la consulta
+    const pickingFolio = await request.query(query);
+    console.log("Resultado PickingFolio: ", pickingFolio);
+
     if (pickingFolio.recordset.length === 0) {
       return { status: 404, error: 'No existen picking para mostrar' };
     }
 
-    const responsePickingFolio= pickingFolio.recordset;
+    const responsePickingFolio = pickingFolio.recordset;
     responsePickingFolio.forEach(item => {
       console.log(item.Direccion);
       if (item.Direccion) {
         // Reemplaza el # por una cadena vacía
         item.Direccion = item.Direccion.replace('#', '').trim();
-        
       }
     });
 
-    return { status: 200, data: responsePickingFolio};
+    return { status: 200, data: responsePickingFolio };
   } catch (error) {
-    console.log("error : " , error);
-      return { status: 500, error: 'Error en el servidor getPickingFolio' };
+    console.log("Error: ", error);
+    return { status: 500, error: 'Error en el servidor getPickingFolio' };
   } finally {
-      await closeDatabaseConnection();
+    await closeDatabaseConnection();
   }
 }
 

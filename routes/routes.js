@@ -18,7 +18,7 @@ const {getAllareas , deletetArea , insertarArea} = require('../controllers/areas
 const {getAllActividades , getActividadId} = require('../controllers/actividadesControllers');
 const{insertarRegistroUbicacion , obtenerUbicacionFecha} = require('../controllers/insertarRegistroUbicacionControllers');
 const {getListadoPicking , getPickingFolio , getPickingFolioDetalle} = require('../controllers/capturadorSerie/listadoPickingControllers');
-const {updateEnProcesoCaptura  , insertarCapturas, updateSolicitadoCaptura} = require('../controllers/capturadorSerie/updateCapturaSerieControllers');
+const {updateEnProcesoCaptura  , insertarCapturas, updateSolicitadoCaptura , insertarCapturasAccesorios} = require('../controllers/capturadorSerie/updateCapturaSerieControllers');
 const {obtenerHerramienta} = require('../controllers/generarEtiqueta/generarEtiquetaControllers');
 const {obtenerStock} = require('../controllers/obtenerStock/obtenerStockControllers');
 
@@ -65,6 +65,7 @@ router.get('/get-picking-correlativo-detalle/:correlativo/:area' , getPickingFol
 //actualiza estado de captura enProceso y procesado
 router.put('/actualiza-glosa-enproceso/', updateEnProcesoCaptura);
 router.post('/insertar-datos-capturados', insertarCapturas);
+router.post('/insertar-datos-capturados-accesorios', insertarCapturasAccesorios);
 router.put('/update-glosa-solicitado', updateSolicitadoCaptura);
 
 //Herramientas
