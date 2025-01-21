@@ -21,6 +21,7 @@ const {getListadoPicking , getPickingFolio , getPickingFolioDetalle} = require('
 const {updateEnProcesoCaptura  , insertarCapturas, updateSolicitadoCaptura} = require('../controllers/capturadorSerie/updateCapturaSerieControllers');
 const {obtenerHerramienta} = require('../controllers/generarEtiqueta/generarEtiquetaControllers');
 const {obtenerStock} = require('../controllers/obtenerStock/obtenerStockControllers');
+const {generarPdf417 , consultarCargador, consultarEquivalenciaItem , insertaDataBitacoraEquisZ} = require('../controllers/generarPDF417/generarPDF417Controllers');
 
 // endpoint de usuarios
 router.post('/crear-usuarios', crearUsuarios);
@@ -72,5 +73,11 @@ router.get('/generar-etiquetaC/:Item', obtenerHerramienta);
 
 //Consulta stock por item bodega 02
 router.get('/consultar-stock-item/:item', obtenerStock);
+
+//Generar PDF417 para item Z
+router.post('/generar-pdf417', generarPdf417);
+router.get('/get-item-cargador/:item' , consultarCargador )
+router.get('/get-equivalencia-item/:item' , consultarEquivalenciaItem )
+router.post('/inserta-data-bitacora-equisZ' , insertaDataBitacoraEquisZ )
 
 module.exports = router;
