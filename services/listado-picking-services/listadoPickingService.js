@@ -12,7 +12,7 @@ async function getPickingList(area) {
     // Buscar el la acividad por NombreActividad
     if(area.toLowerCase() === 'accesorios'){
       query = `
-      SELECT DISTINCT 
+            SELECT DISTINCT
           a.empresa,
           a.correlativo,
           a.entidad,
@@ -29,20 +29,20 @@ async function getPickingList(area) {
           d.Fecha,
           i.clasif1,
           b.Tipoitem,
-          (SELECT COUNT(*) 
-          FROM CapturaDet x 
-          WHERE x.empresa = a.empresa 
-            AND x.Tipodocumento = a.TipoDocumento 
-            AND x.correlativo = a.correlativo 
+          (SELECT COUNT(*)
+          FROM CapturaDet x
+          WHERE x.empresa = a.empresa
+            AND x.Tipodocumento = a.TipoDocumento
+            AND x.correlativo = a.correlativo
             AND x.proceso = a.proceso) AS Total_Items
-        FROM 
+        FROM
           Captura a,
           capturadet b,
           item i,
           Documento d
-        WHERE 
+        WHERE
           a.proceso  = 'Solicitado'
-          AND a.procesoAccesorios = 'SinProcesar'
+          AND b.procesoAccesorios = 'SinProcesar'
           AND a.Tipodocumento = 'PICKING'
           AND a.empresa = b.empresa
           AND a.Tipodocumento = b.Tipodocumento
@@ -53,9 +53,9 @@ async function getPickingList(area) {
           And a.empresa = d.empresa
           and a.DocumentoOrigen= d.TipoDocumento
           AND a.CorrelativoOrigen = d.Correlativo
-          AND i.Clasif1 = '${area}'
-          AND i.TipoItem = '03-ACCESORIOS'
-          ORDER BY d.Fecha ASC
+         AND i.Clasif1 = 'Accesorios'
+         AND i.TipoItem = '03-ACCESORIOS'
+        ORDER BY d.Fecha desc
 `;
     }else{
       query = `
