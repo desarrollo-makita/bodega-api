@@ -184,7 +184,7 @@ async function insertaDataBitacoraEquisZ(req, res) {
         request.input('serieHasta', sql.VarChar, serieHasta);
         request.input('ean', sql.VarChar, ean);
         request.input('cargador', sql.VarChar, cargador);
-        request.input('bateria', sql.VarChar, cargador);
+        request.input('bateria', sql.VarChar, bateria);
 
         // Consulta SQL para insertar datos
         const query = `
