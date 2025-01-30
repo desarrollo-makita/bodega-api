@@ -152,7 +152,7 @@ async function insertarCapturasAccesorios(req, res) {
                 .input("CantidadPedida", sql.Int, parseInt(cantidadPedida))
                 .input("SerieActual", sql.VarChar(50), serieActual)
                 .input("Ubicacion", sql.VarChar(50), ubicacion)
-                .input("Proceso", sql.VarChar(50), "Procesado")
+                .input("Proceso", sql.VarChar(50), "Procesada")
                 .input("Usuario", sql.VarChar(50), usuario)
                 .input("FechaHoraActual", sql.DateTime, new Date(fechaHoraActual)) // Convertir la fecha a formato adecuado
                 .execute("InsertCapturaAccesorios");
