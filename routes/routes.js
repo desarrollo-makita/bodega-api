@@ -22,7 +22,7 @@ const {updateEnProcesoCaptura  , insertarCapturas, updateSolicitadoCaptura , ins
 const {obtenerHerramienta} = require('../controllers/generarEtiqueta/generarEtiquetaControllers');
 const {obtenerStock} = require('../controllers/obtenerStock/obtenerStockControllers');
 const {generarPdf417 , consultarCargador, consultarEquivalenciaItem , insertaDataBitacoraEquisZ} = require('../controllers/generarPDF417/generarPDF417Controllers');
-
+const {obtenerListaKit,insertarItemKitCabecera , insertarDataKitDetalle} = require('../controllers/consultarKIT/consultarKITControllers');
 // endpoint de usuarios
 router.post('/crear-usuarios', crearUsuarios);
 router.put('/editar-usuarios', verifyToken, editUser);
@@ -80,5 +80,10 @@ router.post('/generar-pdf417', generarPdf417);
 router.get('/get-item-cargador/:item' , consultarCargador )
 router.get('/get-equivalencia-item/:item' , consultarEquivalenciaItem )
 router.post('/inserta-data-bitacora-equisZ' , insertaDataBitacoraEquisZ )
+
+//KIT
+router.get('/get-lista-kit/:item' , obtenerListaKit )
+router.post('/inserta-data-cabecera-kit-detalle' , insertarDataKitDetalle )
+router.post('/inserta-data-cabecera-kit' , insertarItemKitCabecera )
 
 module.exports = router;
