@@ -83,7 +83,7 @@ router.post('/inserta-data-bitacora-equisZ' , insertaDataBitacoraEquisZ )
 
 //KIT
 router.get('/get-lista-kit/:item' , obtenerListaKit )
-router.post('/inserta-data-cabecera-kit-detalle' , insertarDataKitDetalle )
+router.post('/inserta-data-kit-detalle' , insertarDataKitDetalle )
 router.post('/inserta-data-cabecera-kit' , insertarItemKitCabecera )
 
 module.exports = router;

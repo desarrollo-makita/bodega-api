@@ -55,8 +55,9 @@ async function insertarDataKitDetalle(req, res) {
 
     try {
         
-        let responseData = [];
-        
+        let itemEncontrado = null; // Variable para almacenar el objeto encontrado
+        let proceso = 0; // Variable para el proceso (0 = éxito, 1 = error)
+
         await connectToDatabase('BodegaMantenedor');
         
         for (const codigo of data.listaCodigos) {
@@ -71,22 +72,42 @@ async function insertarDataKitDetalle(req, res) {
             // Ejecutamos el procedimiento almacenado y obtenemos la respuesta
             const result = await request.execute("InsertDataKit");
 
-            // Capturamos la respuesta y la almacenamos
-            responseData.push(result.recordset[0]);  
+            // Verificamos si hay algún error
+            if (result.recordset.length > 0 && result.recordset[0].status === "error") {
+                // Si hay un error, cambiamos el proceso a 1
+                proceso = 1;
+            }
+
+            // Buscar coincidencias parciales con LIKE usando includes()
+            if (!itemEncontrado) {
+                itemEncontrado = data.listaCodigos.find(codigo => 
+                    data.selectedItem.toLowerCase().includes(codigo.item.toLowerCase())
+                );
+            }
         }
 
-       
-        logger.info(`Fin de la funcion insertarDataKit ${JSON.stringify(responseData)}`);
-        res.status(200).json(responseData);
+        logger.info(`Fin de la funcion insertarDataKit ${JSON.stringify(itemEncontrado)}`);
+
+        // Enviar la respuesta con el objeto y el proceso (0 si exitoso, 1 si error)
+        res.status(200).json({
+            itemEncontrado: {
+                ...itemEncontrado,
+                proceso: proceso // Indicar el estado del proceso
+            }
+        });
+        
     } catch (error) {
         logger.error(`Error en insertarDataKit: ${error.message}`);
-        res.status(500).json({
-            error: `Error en el servidor [insertarDataKit]: ${error.message}`,
-        });
-    }finally{
+        if (!res.headersSent) { // Solo enviamos si no se ha enviado una respuesta ya
+            res.status(500).json({
+                error: `Error en el servidor [insertarDataKit]: ${error.message}`,
+            });
+        }
+    } finally {
         await closeDatabaseConnection();
     }
 }
+
 
 async function insertarItemKitCabecera(req, res) {
     const data = req.body; // Datos enviados en la solicitud
@@ -96,23 +117,18 @@ async function insertarItemKitCabecera(req, res) {
         // Establece la conexión a la base de datos
         await connectToDatabase('BodegaMantenedor');
 
-        let responseData = [];
-
         // Llamamos al procedimiento para cada item en la lista
         const request = new sql.Request();
         request.input("ItemKitID", sql.VarChar(100), data.ItemKitID);  // 'GA4530-3'
         request.input("tipoItem", sql.VarChar(100), '02-KIT');  // 'GA4530-3'
         request.input("empresa", sql.VarChar(100), 'Makita');  // 'GA4530-3'
-        request.input("ean", sql.VarChar(100), '0088381096959');  // '0088381096959'
+        request.input("ean", sql.VarChar(100), data.ean);  // '0088381096959'
 
         // Ejecutamos el procedimiento almacenado
         const result = await request.execute("InsertItemKitWithSerie");
 
-        // Capturamos la respuesta y la almacenamos
-        responseData.push(result.recordset[0]);
-
-        logger.info(`Fin de la función insertarItemKitDetalle ${JSON.stringify(responseData)}`);
-        res.status(200).json(responseData);  // Respuesta de éxito con los datos insertados
+        logger.info(`Fin de la función insertarItemKitDetalle ${JSON.stringify(result.recordset[0])}`);
+        res.status(200).json(result.recordset[0]);  // Respuesta de éxito con los datos insertados
     } catch (error) {
         logger.error(`Error en insertarItemKitDetalle: ${error.message}`);
         res.status(500).json({
