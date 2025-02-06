@@ -51,15 +51,13 @@ async function obtenerListaKit(req, res) {
 
 async function insertarDataKitDetalle(req, res) {
     let data = req.body;
-    logger.info(`Iniciamos la funcion insertarDataKit ${JSON.stringify(data)}`);
+    logger.info(`Iniciamos la funcion insertarDataKitDetalle ${JSON.stringify(data)}`);
 
     try {
-        
-        let itemEncontrado = null; // Variable para almacenar el objeto encontrado
-        let proceso = 0; // Variable para el proceso (0 = éxito, 1 = error)
+        let itemsProcesados = []; // Arreglo para almacenar los datos procesados
 
         await connectToDatabase('BodegaMantenedor');
-        
+
         for (const codigo of data.listaCodigos) {
             const request = new sql.Request();
             request.input("selectedItem", sql.VarChar(100), data.selectedItem);
@@ -72,41 +70,49 @@ async function insertarDataKitDetalle(req, res) {
             // Ejecutamos el procedimiento almacenado y obtenemos la respuesta
             const result = await request.execute("InsertDataKit");
 
-            // Verificamos si hay algún error
-            if (result.recordset.length > 0 && result.recordset[0].status === "error") {
-                // Si hay un error, cambiamos el proceso a 1
-                proceso = 1;
-            }
+            // Determinar el estado del proceso (0 = éxito, 1 = error)
+            let proceso = (result.recordset.length > 0 && result.recordset[0].status === "error") ? 1 : 0;
 
-            // Buscar coincidencias parciales con LIKE usando includes()
-            if (!itemEncontrado) {
-                itemEncontrado = data.listaCodigos.find(codigo => 
-                    data.selectedItem.toLowerCase().includes(codigo.item.toLowerCase())
-                );
-            }
+            // Agregar el resultado al array
+            itemsProcesados.push({
+                item: codigo.item,
+                serieInicio: codigo.serieInicio,
+                serieHasta: codigo.serieHasta,
+                letraFabrica: codigo.letraFabrica,
+                ean: codigo.ean,
+                proceso: proceso
+            });
         }
 
-        logger.info(`Fin de la funcion insertarDataKit ${JSON.stringify(itemEncontrado)}`);
+        const itemEncontrado = data.listaCodigos.find(codigo =>
+            data.selectedItem.toLowerCase().includes(codigo.item.toLowerCase())
+        );
 
-        // Enviar la respuesta con el objeto y el proceso (0 si exitoso, 1 si error)
-        res.status(200).json({
-            itemEncontrado: {
-                ...itemEncontrado,
-                proceso: proceso // Indicar el estado del proceso
-            }
-        });
-        
+        logger.info(`Fin de la función insertarDataKitDetalle ${JSON.stringify(itemsProcesados)}`);
+
+        // Crear la respuesta final con la estructura deseada
+        const response = {
+            ean: itemEncontrado ? itemEncontrado.ean : null,
+            serieInicio: itemEncontrado ? itemEncontrado.serieInicio : null,
+            itemEncontrado: itemsProcesados
+        };
+
+        // Enviar la respuesta con el array de items procesados
+        res.status(200).json(response);
+
     } catch (error) {
-        logger.error(`Error en insertarDataKit: ${error.message}`);
+        logger.error(`Error en insertarDataKitDetalle: ${error.message}`);
         if (!res.headersSent) { // Solo enviamos si no se ha enviado una respuesta ya
             res.status(500).json({
-                error: `Error en el servidor [insertarDataKit]: ${error.message}`,
+                error: `Error en el servidor [insertarDataKitDetalle]: ${error.message}`,
             });
         }
     } finally {
         await closeDatabaseConnection();
     }
 }
+
+
 
 
 async function insertarItemKitCabecera(req, res) {
@@ -127,7 +133,12 @@ async function insertarItemKitCabecera(req, res) {
         // Ejecutamos el procedimiento almacenado
         const result = await request.execute("InsertItemKitWithSerie");
 
-        logger.info(`Fin de la función insertarItemKitDetalle ${JSON.stringify(result.recordset[0])}`);
+        logger.info(`Fin de la función insertarItemKitDetalle ${JSON.stringify(result.recordset)}`);
+
+        let serieInicioKit = result.recordset[0].serieDesde
+        
+        await actualizarSeriesEnBD(data.ItemKitID, data.series , serieInicioKit);
+        
         res.status(200).json(result.recordset[0]);  // Respuesta de éxito con los datos insertados
     } catch (error) {
         logger.error(`Error en insertarItemKitDetalle: ${error.message}`);
@@ -228,6 +239,21 @@ async function eliminarItemKitCabecera(req, res) {
     }
 }
 
+async function actualizarSeriesEnBD(ItemKitID, series , serieInicioKit) {
+    try {
+        for (const serie of series) {
+            await connectToDatabase('BodegaMantenedor');
+            // Construir la consulta utilizando el item como filtro
+            const update = `update BodegaMantenedor.dbo.ItemKitDetalle set serieKitAsociada  = '${serieInicioKit}' where serieDesde = '${serie}' `;
+            logger.info(`UPDATE  ejecutar : ${update}`);
+        
+            const result = await sql.query(update);
+            logger.info(`Resultado de UPDATE ${JSON.stringify(result)}`);
+        }
+    } catch (error) {
+        logger.error(`Error al actualizar series: ${error.message}`);
+    }
+}
 
 module.exports = {
     obtenerListaKit,
