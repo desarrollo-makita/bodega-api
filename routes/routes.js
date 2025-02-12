@@ -23,6 +23,10 @@ const {obtenerHerramienta} = require('../controllers/generarEtiqueta/generarEtiq
 const {obtenerStock} = require('../controllers/obtenerStock/obtenerStockControllers');
 const {generarPdf417 , consultarCargador, consultarEquivalenciaItem , insertaDataBitacoraEquisZ} = require('../controllers/generarPDF417/generarPDF417Controllers');
 const {obtenerListaKit,insertarItemKitCabecera , insertarDataKitDetalle ,eliminarDataKitDetalle, eliminarItemKitCabecera} = require('../controllers/consultarKIT/consultarKITControllers');
+const {consultarInventario} = require('../controllers/inventario/inventarioControllers');
+
+
+
 // endpoint de usuarios
 router.post('/crear-usuarios', crearUsuarios);
 router.put('/editar-usuarios', verifyToken, editUser);
@@ -88,5 +92,8 @@ router.post('/inserta-data-cabecera-kit' , insertarItemKitCabecera )
 // Nuevas rutas para eliminar datos en caso de error
 router.delete('/elimina-data-kit-detalle', eliminarDataKitDetalle);
 router.delete('/elimina-data-cabecera-kit', eliminarItemKitCabecera);
+
+//inventario
+router.get('/consultar-inventario' , consultarInventario )
 
 module.exports = router;

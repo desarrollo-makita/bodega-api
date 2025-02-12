@@ -10,7 +10,7 @@ async function getAllMenuService(data) {
         const request = new sql.Request();
         
         // Buscar el usuario por NombreUsuario
-        const getAllMenu = await request.query('SELECT * FROM Menu');
+        const getAllMenu = await request.query(`SELECT * FROM Menu WHERE ACTIVO ='SI'`);
         
        
         if (getAllMenu.recordset.length === 0) {
