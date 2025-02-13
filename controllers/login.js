@@ -8,18 +8,24 @@ const logger = require('../config/logger.js');
 
 async function login(req, res) {
   logger.info(`Iniciamos la función login controllers`);
+  
   let showMenu;
   let showActividades;
+  
   try {
     const { nombreUsuario, clave } = req.body;
+    
     console.log(req.body);
+    
     const data = {
       nombreUsuario: nombreUsuario,
       clave: clave,
     };
 
     const login = await loginServices.loginServices(data);
+    
     console.log('loginResponse :;', login);
+    
     if (login.status != 200) {
       res.status(login.status).json({ error: login.error });
     } else {
@@ -50,7 +56,16 @@ async function login(req, res) {
       
       if (login.data.Rol === 'Administrador' || login.data.Rol === 'Operario') {
         showMenu = await menuServices.getAllMenuService();
+        
+      if (login.data.UsuarioID === 1195){
+          showMenu = showMenu.filter(item => item.MenuID === 4);
+          console.log("showMenu", showMenu);
+      }
+        
+        
+        
         showActividades = await actividadServices.getActividadesUsuarioId(idUsuario);
+        
       } else if(login.data.Rol === 'Consulta') {
         showMenu = await menuServices.perfilConsulta();
       }
