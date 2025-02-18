@@ -23,7 +23,7 @@ const {obtenerHerramienta} = require('../controllers/generarEtiqueta/generarEtiq
 const {obtenerStock} = require('../controllers/obtenerStock/obtenerStockControllers');
 const {generarPdf417 , consultarCargador, consultarEquivalenciaItem , insertaDataBitacoraEquisZ} = require('../controllers/generarPDF417/generarPDF417Controllers');
 const {obtenerListaKit,insertarItemKitCabecera , insertarDataKitDetalle ,eliminarDataKitDetalle, eliminarItemKitCabecera} = require('../controllers/consultarKIT/consultarKITControllers');
-const {consultarInventario} = require('../controllers/inventario/inventarioControllers');
+const {consultarInventario , asignarCapturador} = require('../controllers/inventario/inventarioControllers');
 
 
 
@@ -95,5 +95,6 @@ router.delete('/elimina-data-cabecera-kit', eliminarItemKitCabecera);
 
 //inventario
 router.get('/consultar-inventario' , consultarInventario )
+router.post('/asignar-capturador' , asignarCapturador )
 
 module.exports = router;
