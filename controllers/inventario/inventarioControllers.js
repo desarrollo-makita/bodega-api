@@ -9,6 +9,7 @@ const inventarioService = require('../../services/inventario/inventarioServices.
 const asignarCapturadorService = require('../../services/inventario/asignarCapturadorServices.js')
 const consultarAsignacionService = require('../../services/inventario/consultarAsignacionServices.js')
 const eliminarAsignacionService = require('../../services/inventario/eliminarAsignacionServices.js')
+const consultarAsignacionFiltroService = require('../../services/inventario/consultarAsignacionFiltroServices.js')
 
 /**
  * Retorna Consulta de inventario
@@ -103,9 +104,34 @@ async function deletetAsignacion(req, res) {
 }
 
 
+async function consultarAsignacionFiltro(req, res) {
+   try {
+     
+      const { capturador , mes, periodo } = req.query;
+      
+      logger.info(`Iniciamos la función consultarAsignacionFiltro controllers con filtro ${capturador} - ${mes} - ${periodo}`);
+     
+      const dataAsignacion = await consultarAsignacionFiltroService.consultarAsignaiconFiltro(capturador, mes, periodo);
+                                                    
+      if (dataAsignacion.status != 200) {
+        res.status(404).json({ error: dataAsignacion.error });
+      }
+      else {
+        res.status(200).json(dataAsignacion);
+      }
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error en el servidor' });
+    } finally {
+      await closeDatabaseConnection();
+    }
+  }
+
+
 module.exports = {
     consultarInventario,
     asignarCapturador,
     consultarAsignacion,
-    deletetAsignacion
+    deletetAsignacion,
+    consultarAsignacionFiltro
   };
