@@ -99,6 +99,6 @@ router.post('/asignar-capturador' , asignarCapturador )
 router.get('/consultar-asignacion' , consultarAsignacion )
 router.delete('/delete-asignacion',  deletetAsignacion);
 router.get('/consultar-asignacion-filtro/:capturador/:mes/:periodo',  consultarAsignacionFiltro);
-router.get('/iniciar-inventario',  iniciarInventario);
+router.get('/iniciar-inventario/:periodo/:mes/:accion',  iniciarInventario);
 
 module.exports = router;

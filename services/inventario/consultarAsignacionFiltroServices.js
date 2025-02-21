@@ -34,11 +34,11 @@ async function consultarAsignaiconFiltro(capturador, mes, periodo) {
 
       // Verifica si hay resultados y maneja el caso de no encontrar datos
       if (asignacionDispositivos.recordset.length > 0) {
-          console.log("Respuesta de la consulta:", asignacionDispositivos.recordset[0]);
+          console.log("Respuesta de la consulta:", asignacionDispositivos);
           return { status: 200, data: asignacionDispositivos.recordset[0] };
       } else {
           console.log("No se encontraron datos para la asignación");
-          return { status: 404, error: 'No se encontraron datos' };
+          return { status: 204, data: "Capturador no asignado a ningun usuario" };
       }
   } catch (error) {
       console.error("Error:", error);

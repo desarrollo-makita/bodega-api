@@ -19,6 +19,7 @@ async function consultarAsignaicon() {
 
         const result = await request.query(query);
 
+       
         // Transformamos el resultado para que tenga el formato deseado
         const data = result.recordset.map(item => ({
             Usuario: item.Usuario,

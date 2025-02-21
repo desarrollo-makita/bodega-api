@@ -111,13 +111,13 @@ async function consultarAsignacionFiltro(req, res) {
       
       logger.info(`Iniciamos la función consultarAsignacionFiltro controllers con filtro ${capturador} - ${mes} - ${periodo}`);
      
-      const dataAsignacion = await consultarAsignacionFiltroService.consultarAsignaiconFiltro(capturador, mes, periodo);
+      const data = await consultarAsignacionFiltroService.consultarAsignaiconFiltro(capturador, mes, periodo);
                                                     
-      if (dataAsignacion.status != 200) {
-        res.status(404).json({ error: dataAsignacion.error });
+      if (data.status != 200) {
+        res.status(404).json(data );
       }
       else {
-        res.status(200).json(dataAsignacion);
+        res.status(200).json(data);
       }
     } catch (error) {
       console.error(error);
