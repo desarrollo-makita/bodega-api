@@ -127,11 +127,33 @@ async function consultarAsignacionFiltro(req, res) {
     }
   }
 
+  async function iniciarInventario(req, res) {
+    try {
+        console.log("Parámetros de entrada:", req.query);
+      
+        const data = req.query;
+  
+        logger.info(`Iniciamos la función iniciarInventario - Controllers ${JSON.stringify(data)}`);
+  
+        const result = await inventarioService.iniciarInventario(data);
+  
+        res.status(result.status).json(result);
+    } catch (error) {
+        console.error("Error en iniciarInventario:", error);
+        res.status(500).json({ error: 'Error en el servidor al iniciar inventario' });
+    } finally {
+        await closeDatabaseConnection();
+    }
+  }
+
+
+
 
 module.exports = {
     consultarInventario,
     asignarCapturador,
     consultarAsignacion,
     deletetAsignacion,
-    consultarAsignacionFiltro
+    consultarAsignacionFiltro,
+    iniciarInventario
   };
