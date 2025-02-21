@@ -4,33 +4,50 @@ const { connectToDatabase, closeDatabaseConnection } = require('../../config/dat
 const logger = require('../../config/logger.js');
 
 
-async function consultarAsignaiconFiltro(capturador  , mes  , periodo) {
-    try {
-        logger.info(`Iniciamos la función consultarAsignaiconFiltro services`);
-    await connectToDatabase('BodegaMantenedor');
-    const request = new sql.Request();
+async function consultarAsignaiconFiltro(capturador, mes, periodo) {
+  try {
+      logger.info(`Iniciamos la función consultarAsignacionFiltro services`);
+      await connectToDatabase('BodegaMantenedor');
+      const request = new sql.Request();
 
-    // Definir la consulta inicial
-    let query = `select * from BodegaMantenedor.dbo.asignaCapturador where Empresa = 'Makita' and Capturador = ${capturador} and periodo =${periodo}  and Mes = ${mes}  `;
+      // Usamos parámetros para prevenir SQL Injection
+      request.input('capturador', sql.VarChar, capturador);
+      request.input('mes', sql.Int, mes);
+      request.input('periodo', sql.Int, periodo);
 
-    // Muestra el query en la consola
-    console.log("Query ejecutado:", query);
+      // Definir la consulta con parámetros
+      let query = `
+          SELECT * 
+          FROM BodegaMantenedor.dbo.asignaCapturador
+          WHERE Empresa = 'Makita' 
+          AND Capturador = @capturador 
+          AND Periodo = @periodo
+          AND Mes = @mes
+      `;
 
-    // Ejecuta el primer query
-    let asignacionDispositivos = await request.query(query);
+      // Muestra el query en la consola con los parámetros
+      console.log("Query ejecutado:", query);
+      console.log("Parámetros:", capturador, mes, periodo);
 
-    console.log("respuesta de la consulta : " , asignacionDispositivos.recordset[0]);
-    
-    return { status: 200, data : asignacionDispositivos.recordset[0] } 
-    
-}catch (error) {
-    console.error("error:", error);
-    return { status: 500, error: 'Error en el servidor consultarAsignaiconFiltro' };
+      // Ejecutar la consulta
+      let asignacionDispositivos = await request.query(query);
+
+      // Verifica si hay resultados y maneja el caso de no encontrar datos
+      if (asignacionDispositivos.recordset.length > 0) {
+          console.log("Respuesta de la consulta:", asignacionDispositivos.recordset[0]);
+          return { status: 200, data: asignacionDispositivos.recordset[0] };
+      } else {
+          console.log("No se encontraron datos para la asignación");
+          return { status: 404, error: 'No se encontraron datos' };
+      }
+  } catch (error) {
+      console.error("Error:", error);
+      return { status: 500, error: 'Error en el servidor consultarAsignacionFiltro' };
   } finally {
-    await closeDatabaseConnection();
+      await closeDatabaseConnection();
   }
-
 }
+
 
 
 module.exports = {

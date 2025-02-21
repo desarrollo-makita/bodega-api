@@ -107,7 +107,7 @@ async function deletetAsignacion(req, res) {
 async function consultarAsignacionFiltro(req, res) {
    try {
      
-      const { capturador , mes, periodo } = req.query;
+      const { capturador , mes, periodo } = req.params;
       
       logger.info(`Iniciamos la función consultarAsignacionFiltro controllers con filtro ${capturador} - ${mes} - ${periodo}`);
      
@@ -129,9 +129,9 @@ async function consultarAsignacionFiltro(req, res) {
 
   async function iniciarInventario(req, res) {
     try {
-        console.log("Parámetros de entrada:", req.query);
+        console.log("Parámetros de entrada:", req.params);
       
-        const data = req.query;
+        const data = req.params;
   
         logger.info(`Iniciamos la función iniciarInventario - Controllers ${JSON.stringify(data)}`);
   
