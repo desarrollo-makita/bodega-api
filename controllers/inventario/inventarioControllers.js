@@ -146,7 +146,189 @@ async function consultarAsignacionFiltro(req, res) {
     }
   }
 
+  async function insertarInventario(req, res) {
+    logger.info(`Iniciamos funcion insertarInventario`);
+    try {
+        
+        const { 
+            Id, Empresa, FechaInventario, TipoInventario, Bodega, Clasif1, 
+            Ubicacion, Item, Cantidad, Estado, Usuario, NombreDispositivo 
+        } = req.body;
 
+         // Verificar si algún campo está vacío, es null o undefined
+        if (!Empresa || !FechaInventario || !TipoInventario || !Bodega || !Clasif1 || !Ubicacion || !Item || !Cantidad) {
+            logger.error(`Error faltan parametros de entrada a la solicitud`);
+            return res.status(400).json({ error: `Todos los campos son requeridos.` });
+        }
+
+        const consulta = `
+        INSERT INTO inventario (Empresa, FechaInventario, TipoInventario, Clasif1, Bodega, Ubicacion, Item, Cantidad, Estado, Usuario, NombreDispositivo) 
+        VALUES ('${Empresa}', '${FechaInventario}', '${TipoInventario}', '${Clasif1}', '${Bodega}', '${Ubicacion}', '${Item}', ${Cantidad}, '${Estado}', '${Usuario}', '${NombreDispositivo}');
+    `;
+    //logger.info(`INSERT a ejecutar : ${consulta}`);
+    
+    const result = await sql.query(consulta);
+    //logger.info(`Resultado de INSERT ${JSON.stringify(result)}`);
+
+    if (result.rowsAffected && result.rowsAffected[0] > 0) {
+        res.json({ mensaje: `Se ingresó inventario para el item ${Item}` });
+    } else {
+        res.status(200).json({ mensaje: "No se insertaron datos para el item proporcionado" });
+    }
+
+   // logger.info(`Fin de la funcion insertarInventario`);
+    } catch (error) {
+        // Manejar errores
+        logger.error(`Error al insertar inventario: ${error.message}`);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+  }
+
+  async function obtenerUltimaUbicacion(req, res) {
+    
+    //logger.info(`Iniciamos funcion obtenerUltimaUbicacion XXXX - ${req.params}`);
+    try {
+        // Obtener el ID de la URL
+        const { tipoinventario,tipoitem,usuario,fechainventario,bodega } = req.params;
+
+        // Convertir fecha a formato YYYY-MM-DD
+        const fechaFormateada = moment(fechainventario, ['YYYY-MM-DD', 'DD-MM-YYYY', 'MM-DD-YYYY']).format('YYYY-MM-DD');
+
+       //logger.info(`Se formatea fecha  - ${fechaFormateada}`);
+
+        logger.info(`PASA 1 - ${fechaFormateada}`);
+
+        // Construir la consulta utilizando el item como filtro
+        const consulta = ` select distinct ubicacion
+                             from inventario
+                            where TipoInventario = '${tipoinventario}'
+                              AND clasif1 = '${tipoitem}'
+                              AND usuario = '${usuario}'
+                              AND cast(FechaInventario as date) =  '${fechaFormateada}'
+                              AND Bodega = '${bodega}'
+                              AND id in (  SELECT max(id)
+                              from inventario 
+                             where TipoInventario = '${tipoinventario}'
+                               AND clasif1 = '${tipoitem}'
+                               AND usuario = '${usuario}'
+                               AND cast(FechaInventario as date) =  '${fechaFormateada}'
+                               AND Bodega = '${bodega}');`;
+
+        
+        logger.info(`Query que ejecuta:   - ${consulta}`);
+        
+        const result = await sql.query(consulta);
+       // logger.info(`Resultado de la consulta:   - ${JSON.stringify(result)}`);
+
+        // Verificar si se encontraron resultados
+        if (result.recordset.length > 0) {
+            // Responder con el resultado en formato JSON
+            res.json(result.recordset);
+           // res.status(800).json({ error: "OK ULTIMA" });
+        } 
+        else
+        {
+            // Si no se encontraron resultados, responder con un mensaje
+            res.status(404).json({ error: "NOOK ULTIMA" });
+        }
+       // logger.info(`Fin de la funcion obtenerUltimaUbicacion`);
+
+        
+    } catch (error) {
+        // Manejar errores
+        logger.error(`Error al obtener la ubicación del item: ${error.message}`);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+  }
+
+  async function validarUbicacionProducto(req, res) 
+{
+    logger.info(`Iniciamos función validarUbicacionProducto - ${JSON.stringify(req.params)}`);
+
+    try {
+        const { fechainventario, item, ubicacion, usuario } = req.params;    
+
+        const fechaFormateada = moment(fechainventario, ['YYYY-MM-DD', 'DD-MM-YYYY', 'MM-DD-YYYY']).format('YYYY-MM-DD');
+
+        logger.info(`Se formatea fecha  - ${fechaFormateada}`);
+
+        logger.info(`PASA  - ${fechaFormateada}`);
+
+      
+        const consulta = `SELECT DISTINCT item 
+                          FROM inventario  
+                          WHERE cast(FechaInventario as date) =  '${fechaFormateada}'
+                            AND item =  '${item}'
+                            AND ubicacion = '${ubicacion}'
+                            AND usuario = '${usuario}'
+                            AND estado = 'Ingresado'`;
+
+        logger.info(`Ejecutando consulta: ${consulta}`);
+     
+        const result = await sql.query(consulta);
+       // logger.info(`Resultado de la consulta:   - ${JSON.stringify(result)}`);
+
+        // Verificar si se encontraron resultados
+        if (result.recordset.length > 0) {
+            // Responder con el resultado en formato JSON
+            logger.info(`Resultados encontrados: ${result.recordset.length}`);
+            return res.json("SI");
+           // res.status(800).json({ error: "OK ULTIMA" });
+        } 
+        else
+        {
+            logger.info(`Resultados no encontrados: ${result.recordset.length}`);
+            return res.json("NO");
+        }
+  
+
+    } 
+    catch (error) {
+        logger.error(`Error en validarUbicacionProducto: ${error.message} - ${error.stack}`);
+        return res.status(500).json({ error: "Error interno del servidor" });
+    }
+    
+  }
+
+  async function validarTipoItem(req, res) 
+{
+    logger.info(`Iniciamos función validarTipoItem - ${JSON.stringify(req.params)}`);
+
+    try {
+        const { item, tipoitem } = req.params;    
+
+        
+        const consulta = `SELECT DISTINCT item 
+                          FROM  BdQMakita.dbo.item
+                          WHERE item =  '${item}'
+                            AND Clasif1 = '${tipoitem}'`;
+
+        logger.info(`Ejecutando consulta: ${consulta}`);
+     
+        const result = await sql.query(consulta);
+       // logger.info(`Resultado de la consulta:   - ${JSON.stringify(result)}`);
+
+        // Verificar si se encontraron resultados
+        if (result.recordset.length > 0) {
+            // Responder con el resultado en formato JSON
+            logger.info(`Resultados encontrados: ${result.recordset.length}`);
+            return res.json("SI");
+           // res.status(800).json({ error: "OK ULTIMA" });
+        } 
+        else
+        {
+            logger.info(`Resultados no encontrados: ${result.recordset.length}`);
+            return res.json("NO");
+        }
+  
+
+    } 
+    catch (error) {
+        logger.error(`Error en validarTipoItem: ${error.message} - ${error.stack}`);
+        return res.status(500).json({ error: "Error interno del servidor" });
+    }
+    
+}
 
 
 module.exports = {
@@ -155,5 +337,9 @@ module.exports = {
     consultarAsignacion,
     deletetAsignacion,
     consultarAsignacionFiltro,
-    iniciarInventario
+    iniciarInventario,
+    insertarInventario,
+    obtenerUltimaUbicacion,
+    validarUbicacionProducto,
+    validarTipoItem
   };
