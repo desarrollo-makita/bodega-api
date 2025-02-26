@@ -2,6 +2,7 @@ const logger = require('../../config/logger.js');
 const { connectToDatabase, closeDatabaseConnection } = require('../../config/database.js');
 const sql = require('mssql');
 require('dotenv').config();
+const moment = require('moment');
 
 
 const inventarioService = require('../../services/inventario/inventarioServices.js')
