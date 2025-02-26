@@ -1,6 +1,5 @@
 const logger = require('../../config/logger.js');
-const {connectToDatabase,closeDatabaseConnection,
-} = require('../../config/database.js');
+const { connectToDatabase, closeDatabaseConnection } = require('../../config/database.js');
 const sql = require('mssql');
 require('dotenv').config();
 
@@ -148,8 +147,10 @@ async function consultarAsignacionFiltro(req, res) {
 
   async function insertarInventario(req, res) {
     logger.info(`Iniciamos funcion insertarInventario`);
+    
+   
     try {
-        
+      await connectToDatabase('BodegaMantenedor');
         const { 
             Id, Empresa, FechaInventario, TipoInventario, Bodega, Clasif1, 
             Ubicacion, Item, Cantidad, Estado, Usuario, NombreDispositivo 
@@ -181,13 +182,17 @@ async function consultarAsignacionFiltro(req, res) {
         // Manejar errores
         logger.error(`Error al insertar inventario: ${error.message}`);
         res.status(500).json({ error: "Error interno del servidor" });
+    } finally {
+      await closeDatabaseConnection();
     }
   }
 
   async function obtenerUltimaUbicacion(req, res) {
-    
+   
     //logger.info(`Iniciamos funcion obtenerUltimaUbicacion XXXX - ${req.params}`);
     try {
+
+      await connectToDatabase('BodegaMantenedor');
         // Obtener el ID de la URL
         const { tipoinventario,tipoitem,usuario,fechainventario,bodega } = req.params;
 
@@ -238,7 +243,9 @@ async function consultarAsignacionFiltro(req, res) {
         // Manejar errores
         logger.error(`Error al obtener la ubicación del item: ${error.message}`);
         res.status(500).json({ error: "Error interno del servidor" });
-    }
+    }finally {
+        await closeDatabaseConnection();
+      }
   }
 
   async function validarUbicacionProducto(req, res) 
@@ -246,6 +253,7 @@ async function consultarAsignacionFiltro(req, res) {
     logger.info(`Iniciamos función validarUbicacionProducto - ${JSON.stringify(req.params)}`);
 
     try {
+      await connectToDatabase('BodegaMantenedor');
         const { fechainventario, item, ubicacion, usuario } = req.params;    
 
         const fechaFormateada = moment(fechainventario, ['YYYY-MM-DD', 'DD-MM-YYYY', 'MM-DD-YYYY']).format('YYYY-MM-DD');
@@ -286,6 +294,8 @@ async function consultarAsignacionFiltro(req, res) {
     catch (error) {
         logger.error(`Error en validarUbicacionProducto: ${error.message} - ${error.stack}`);
         return res.status(500).json({ error: "Error interno del servidor" });
+    }finally {
+      await closeDatabaseConnection();
     }
     
   }
@@ -295,6 +305,8 @@ async function consultarAsignacionFiltro(req, res) {
     logger.info(`Iniciamos función validarTipoItem - ${JSON.stringify(req.params)}`);
 
     try {
+
+      await connectToDatabase('BodegaMantenedor');
         const { item, tipoitem } = req.params;    
 
         
@@ -326,6 +338,8 @@ async function consultarAsignacionFiltro(req, res) {
     catch (error) {
         logger.error(`Error en validarTipoItem: ${error.message} - ${error.stack}`);
         return res.status(500).json({ error: "Error interno del servidor" });
+    }finally {
+      await closeDatabaseConnection();
     }
     
 }
