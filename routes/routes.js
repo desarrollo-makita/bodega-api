@@ -111,6 +111,7 @@ router.get('/consultar-asignacion' , consultarAsignacion )
 router.delete('/delete-asignacion',  deletetAsignacion);
 router.get('/consultar-asignacion-filtro/:capturador/:mes/:periodo',  consultarAsignacionFiltro);
 router.get('/iniciar-inventario/:periodo/:mes/:accion',  iniciarInventario);
+
 router.post('/insertar-inventario/', insertarInventario);
 router.get('/insertar-inventario/:tipoinventario/:tipoitem/:usuario/:fechainventario/:bodega', obtenerUltimaUbicacion);
 router.get('/insertar-inventario/:fechainventario/:item/:ubicacion/:usuario', validarUbicacionProducto);

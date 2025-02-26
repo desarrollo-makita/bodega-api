@@ -189,65 +189,75 @@ async function consultarAsignacionFiltro(req, res) {
   }
 
   async function obtenerUltimaUbicacion(req, res) {
-   
-    //logger.info(`Iniciamos funcion obtenerUltimaUbicacion XXXX - ${req.params}`);
     try {
+        // Conexión a la base de datos
+        await connectToDatabase('BodegaMantenedor');
 
-      await connectToDatabase('BodegaMantenedor');
-        // Obtener el ID de la URL
-        const { tipoinventario,tipoitem,usuario,fechainventario,bodega } = req.params;
+        // Obtener parámetros de la URL
+        const { tipoinventario, tipoitem, usuario, fechainventario, bodega } = req.params;
 
         // Convertir fecha a formato YYYY-MM-DD
         const fechaFormateada = moment(fechainventario, ['YYYY-MM-DD', 'DD-MM-YYYY', 'MM-DD-YYYY']).format('YYYY-MM-DD');
 
-       //logger.info(`Se formatea fecha  - ${fechaFormateada}`);
+        // Log para ver la fecha formateada
+        logger.info(`Fecha formateada: ${fechaFormateada}`);
 
-        logger.info(`PASA 1 - ${fechaFormateada}`);
+        // Crear la consulta SQL con parámetros
+        const consulta = `
+            SELECT DISTINCT ubicacion
+            FROM BodegaMantenedor.dbo.inventario
+            WHERE TipoInventario = @tipoinventario
+              AND clasif1 = @tipoitem
+              AND usuario = @usuario
+              AND CAST(FechaInventario AS date) = @fechainventario
+              AND Bodega = @bodega
+              AND id IN (
+                  SELECT MAX(id)
+                 FROM BodegaMantenedor.dbo.inventario
+                  WHERE TipoInventario = @tipoinventario
+                    AND clasif1 = @tipoitem
+                    AND usuario = @usuario
+                    AND CAST(FechaInventario AS date) = @fechainventario
+                    AND Bodega = @bodega
+              );
+        `;
 
-        // Construir la consulta utilizando el item como filtro
-        const consulta = ` select distinct ubicacion
-                             from inventario
-                            where TipoInventario = '${tipoinventario}'
-                              AND clasif1 = '${tipoitem}'
-                              AND usuario = '${usuario}'
-                              AND cast(FechaInventario as date) =  '${fechaFormateada}'
-                              AND Bodega = '${bodega}'
-                              AND id in (  SELECT max(id)
-                              from inventario 
-                             where TipoInventario = '${tipoinventario}'
-                               AND clasif1 = '${tipoitem}'
-                               AND usuario = '${usuario}'
-                               AND cast(FechaInventario as date) =  '${fechaFormateada}'
-                               AND Bodega = '${bodega}');`;
+        // Crear el objeto de la consulta
+        const request = new sql.Request();
 
-        
-        logger.info(`Query que ejecuta:   - ${consulta}`);
-        
-        const result = await sql.query(consulta);
-       // logger.info(`Resultado de la consulta:   - ${JSON.stringify(result)}`);
+        // Pasar los parámetros a la consulta
+        request.input('tipoinventario', sql.NVarChar, tipoinventario);
+        request.input('tipoitem', sql.NVarChar, tipoitem);
+        request.input('usuario', sql.NVarChar, usuario);
+        request.input('fechainventario', sql.Date, fechaFormateada);
+        request.input('bodega', sql.NVarChar, bodega);
 
+        // Log de la consulta para revisión
+        logger.info(`Ejecutando consulta: ${consulta}`);
+
+        // Ejecutar la consulta con los parámetros
+        const result = await request.query(consulta);
+        logger.info(`result ${JSON.stringify(result.recordset)}`);
         // Verificar si se encontraron resultados
         if (result.recordset.length > 0) {
             // Responder con el resultado en formato JSON
             res.json(result.recordset);
-           // res.status(800).json({ error: "OK ULTIMA" });
-        } 
-        else
-        {
-            // Si no se encontraron resultados, responder con un mensaje
-            res.status(404).json({ error: "NOOK ULTIMA" });
+        } else {
+          const resultVacio = []
+          logger.info(`Respuesta 404: ${JSON.stringify(resultVacio)}`);
+          res.status(200).json(resultVacio);
         }
-       // logger.info(`Fin de la funcion obtenerUltimaUbicacion`);
 
-        
     } catch (error) {
         // Manejar errores
         logger.error(`Error al obtener la ubicación del item: ${error.message}`);
         res.status(500).json({ error: "Error interno del servidor" });
-    }finally {
+    } finally {
+        // Asegurarse de cerrar la conexión a la base de datos
         await closeDatabaseConnection();
-      }
+    }
   }
+  
 
   async function validarUbicacionProducto(req, res) 
 {
