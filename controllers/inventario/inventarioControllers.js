@@ -208,7 +208,7 @@ async function consultarAsignacionFiltro(req, res) {
             FROM BodegaMantenedor.dbo.inventario
             WHERE TipoInventario = @tipoinventario
               AND clasif1 = @tipoitem
-              AND usuario = @usuario
+              AND NombreDispositivo = @usuario
               AND CAST(FechaInventario AS date) = @fechainventario
               AND Bodega = @bodega
               AND id IN (
@@ -216,7 +216,7 @@ async function consultarAsignacionFiltro(req, res) {
                  FROM BodegaMantenedor.dbo.inventario
                   WHERE TipoInventario = @tipoinventario
                     AND clasif1 = @tipoitem
-                    AND usuario = @usuario
+                    AND NombreDispositivo = @usuario
                     AND CAST(FechaInventario AS date) = @fechainventario
                     AND Bodega = @bodega
               );
@@ -279,13 +279,13 @@ async function consultarAsignacionFiltro(req, res) {
                           WHERE cast(FechaInventario as date) =  '${fechaFormateada}'
                             AND item =  '${item}'
                             AND ubicacion = '${ubicacion}'
-                            AND usuario = '${usuario}'
+                            AND NombreDispositivo = '${usuario}'
                             AND estado = 'Ingresado'`;
 
         logger.info(`Ejecutando consulta: ${consulta}`);
      
         const result = await sql.query(consulta);
-       // logger.info(`Resultado de la consulta:   - ${JSON.stringify(result)}`);
+       logger.info(`Resultado de la consulta:   - ${JSON.stringify(result.recordset)}`);
 
         // Verificar si se encontraron resultados
         if (result.recordset.length > 0) {
