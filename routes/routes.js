@@ -29,11 +29,13 @@ const {
   consultarAsignacion , 
   deletetAsignacion, 
   consultarAsignacionFiltro, 
-  iniciarInventario,
+  validarInicioInventario,
   insertarInventario,
   obtenerUltimaUbicacion,
   validarUbicacionProducto,
-  validarTipoItem
+  validarTipoItem,
+  consularGrupoBodega,
+  iniciarInventario
 } = require('../controllers/inventario/inventarioControllers');
 
 
@@ -109,13 +111,13 @@ router.get('/consultar-inventario' , consultarInventario )
 router.post('/asignar-capturador' , asignarCapturador )
 router.get('/consultar-asignacion' , consultarAsignacion )
 router.delete('/delete-asignacion',  deletetAsignacion);
+router.get('/validar-inicio-inventario/:periodo/:mes',  validarInicioInventario);
 router.get('/consultar-asignacion-filtro/:capturador/:mes/:periodo',  consultarAsignacionFiltro);
-router.get('/iniciar-inventario/:periodo/:mes/:accion',  iniciarInventario);
-
 router.post('/insertar-inventario/', insertarInventario);
 router.get('/insertar-inventario/:tipoinventario/:tipoitem/:usuario/:fechainventario/:bodega', obtenerUltimaUbicacion);
 router.get('/insertar-inventario/:fechainventario/:item/:ubicacion/:usuario', validarUbicacionProducto);
 router.get('/insertar-inventario/:item/:tipoitem', validarTipoItem);
-
+router.get('/consultar-grupo-bodega' , consularGrupoBodega )
+router.post('/iniciar-inventario' , iniciarInventario )
 
 module.exports = router;

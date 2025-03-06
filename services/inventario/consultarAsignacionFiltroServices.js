@@ -26,8 +26,7 @@ async function consultarAsignaiconFiltro(capturador, mes, periodo) {
       `;
 
       // Muestra el query en la consola con los parámetros
-      console.log("Query ejecutado:", query);
-      console.log("Parámetros:", capturador, mes, periodo);
+    
 
       // Ejecutar la consulta
       let asignacionDispositivos = await request.query(query);

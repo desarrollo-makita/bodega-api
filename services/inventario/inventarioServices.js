@@ -43,7 +43,45 @@ async function consultarInv(data) {
 }
 
 
-async function iniciarInventario(data) {
+async function validarInicioInventario(data) {
+    const { periodo, mes } = data;
+    const empresa = 'Makita';
+    await connectToDatabase('BodegaMantenedor');
+
+    try {
+        logger.info(`Iniciamos la función iniciarInventario services ${periodo}  - ${mes}`);
+
+        const request = new sql.Request();
+
+        // Parámetros para el query
+        request.input('empresa', sql.VarChar(50), empresa);
+        request.input('periodo', sql.Int, periodo);
+        request.input('mes', sql.Int, mes);
+
+        logger.info(`Ejecutamos el SELECT en la tabla bitacoraInventario`);
+
+        // Ejecutar la consulta
+        const result = await request.query(`
+            SELECT * 
+            FROM bitacoraInventario 
+            WHERE empresa = @empresa 
+            AND mes = @mes 
+            AND agno = @periodo
+        `);
+
+        logger.info(`Consulta ejecutada correctamente, registros encontrados: ${result.recordset.length}`);
+
+        return { status: 200, data: result.recordset };
+    } catch (error) {
+        console.error("Error:", error);
+        return { status: 500, error: 'Error en el servidor al obtener inventario' };
+    } finally {
+        await closeDatabaseConnection();
+    }
+}
+
+
+async function registraInicioInventario(data) {
     const { periodo, mes, accion } = data;
     const empresa = 'Makita';
 
@@ -83,7 +121,112 @@ async function iniciarInventario(data) {
 }
 
 
+async function getGrupoBodega(data) {
+    
+    let query;
+
+    try {
+        
+        logger.info(`Iniciamos la función getGrupoBodega services`);
+        await connectToDatabase('BodegaMantenedor');
+        const request = new sql.Request();
+
+        // Usamos los valores desestructurados en la consulta
+        query = `SELECT DISTINCT NumeroLocal , NombreGrupoBodega, GrupoBodega
+                    FROM grupobodega
+                    WHERE numerolocal IN ('01', '04', '03', '05');`;
+
+
+        logger.info(`Ejecutamos la query de getGrupoBodega: ${query}`);
+
+        const grupoBodegaResponse = await request.query(query);
+
+        return { status: 200, data: grupoBodegaResponse.recordset }; 
+    } catch (error) {
+        console.log("Error:", error);
+        return { status: 500, error: 'Error en el servidor grupoBodegaResponse' };
+    } finally {
+        await closeDatabaseConnection();
+    }
+}
+
+
+async function iniciarInventario(data) {
+    const { periodo, mes, numeroLocal, grupoBodega, categorias } = data;
+    const empresa = 'Makita';
+
+    const mensaje = 'Inventario iniciado correctamente';
+    try {
+        logger.info(`Iniciamos la función iniciarInventario services`);
+
+        await connectToDatabase('BodegaMantenedor');
+
+        const resultados = [];
+
+        for (const tipoItem of categorias) {
+            const request = new sql.Request();
+
+            request.input('Empresa', sql.VarChar(20), empresa);
+            request.input('Agno', sql.VarChar(40), periodo);
+            request.input('Mes', sql.Int, mes);
+            request.input('TipoItem', sql.VarChar(20), tipoItem);
+            request.input('Local', sql.VarChar(40), numeroLocal);
+            request.input('Grupo', sql.Int, grupoBodega);
+
+            logger.info(`Ejecutamos el procedimiento almacenado sp_RegistroInventario para TipoItem: ${tipoItem}`);
+    
+            const result = await request.execute('sp_RegistroInventario');
+            resultados.push({ tipoItem, mensaje});
+        }
+
+        logger.info(`Finalizó la ejecución de sp_RegistroInventario para todas las categorías`);
+
+        return { status: 200, resultados };
+    } catch (error) { 
+        console.error("Error001:", error);
+        await eliminarBitacoraInventario(empresa, periodo, mes, numeroLocal, grupoBodega);
+        return { status: 500, error: 'Error en el servidor al iniciar inventario' };
+    } finally {
+        await closeDatabaseConnection();
+    }
+}
+
+
+async function eliminarBitacoraInventario(empresa, periodo, mes, numeroLocal, grupoBodega) {
+    try {
+        const request = new sql.Request();
+
+        request.input('Empresa', sql.VarChar(20), empresa);
+        request.input('Agno', sql.VarChar(40), periodo);
+        request.input('Mes', sql.Int, mes);
+        request.input('Local', sql.VarChar(40), numeroLocal);
+        request.input('Grupo', sql.Int, grupoBodega);
+
+        logger.info(`Eliminando registros de bitacoraInventario para TipoItem: ${tipoItem}`);
+
+        const query = `
+            DELETE FROM bitacoraInventario 
+            WHERE Empresa = @Empresa 
+            AND Agno = @Agno 
+            AND Mes = @Mes 
+            AND TipoItem = @TipoItem 
+            AND Local = @Local 
+            AND Grupo = @Grupo
+        `;
+
+        await request.query(query);
+        logger.info(`Registros eliminados de bitacoraInventario para TipoItem: ${tipoItem}`);
+    } catch (error) {
+        logger.error(`Error al eliminar registros de bitacoraInventario para TipoItem: ${tipoItem}: ${error}`);
+    }
+}
+
+
+
 module.exports = {
     consultarInv,
+    validarInicioInventario,
+    registraInicioInventario,
+    getGrupoBodega,
     iniciarInventario
 };

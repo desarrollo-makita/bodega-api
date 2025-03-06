@@ -104,7 +104,7 @@ async function deletetAsignacion(req, res) {
 }
 
 
-async function consultarAsignacionFiltro(req, res) {
+  async function consultarAsignacionFiltro(req, res) {
    try {
      
       const { capturador , mes, periodo } = req.params;
@@ -127,7 +127,7 @@ async function consultarAsignacionFiltro(req, res) {
     }
   }
 
-  async function iniciarInventario(req, res) {
+  async function validarInicioInventario(req, res) {
     try {
         console.log("Parámetros de entrada:", req.params);
       
@@ -135,7 +135,7 @@ async function consultarAsignacionFiltro(req, res) {
   
         logger.info(`Iniciamos la función iniciarInventario - Controllers ${JSON.stringify(data)}`);
   
-        const result = await inventarioService.iniciarInventario(data);
+        const result = await inventarioService.validarInicioInventario(data);
   
         res.status(result.status).json(result);
     } catch (error) {
@@ -353,7 +353,55 @@ async function consultarAsignacionFiltro(req, res) {
       await closeDatabaseConnection();
     }
     
+  }
+
+  /**
+ * Retorna consularGrupoBodega
+ * @param {*} req
+ * @param {*} res
+ */
+async function consularGrupoBodega(req, res) {
+  try {
+      
+      
+      logger.info(`Iniciamos la función consularGrupoBodega - Controllers`);
+    
+      const asignacionList = await inventarioService.getGrupoBodega();
+
+      res.status(200).json(asignacionList);
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error en el servidor' });
+  } finally {
+    await closeDatabaseConnection();
+  }
 }
+
+
+  /**
+ * Iniciar inventario
+ * @param {*} req
+ * @param {*} res
+ */
+  async function iniciarInventario(req, res) {
+    try {
+        console.log("Parámetros de entrada:", req.body);
+  
+        const data = req.body;
+  
+        logger.info(`Iniciamos la función iniciarInventario - Controllers ${JSON.stringify(data)}`);
+  
+        const result = await inventarioService.iniciarInventario(data);
+  
+        res.status(result.status).json(result);
+    } catch (error) {
+        console.error("Error en asignarCapturador:", error);
+        res.status(500).json({ error: 'Error en el servidor al iniciar inventario' });
+    } finally {
+        await closeDatabaseConnection();
+    }
+  }
 
 
 module.exports = {
@@ -362,9 +410,11 @@ module.exports = {
     consultarAsignacion,
     deletetAsignacion,
     consultarAsignacionFiltro,
-    iniciarInventario,
+    validarInicioInventario,
     insertarInventario,
     obtenerUltimaUbicacion,
     validarUbicacionProducto,
-    validarTipoItem
+    validarTipoItem,
+    consularGrupoBodega,
+    iniciarInventario
   };
