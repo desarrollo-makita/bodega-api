@@ -12,15 +12,15 @@ async function consultarInv(data) {
     try {
         
         logger.info(`Iniciamos la función consultarInv services`);
-        await connectToDatabase('BodegaMantenedor');
+        await connectToDatabase('DTEBodegaMantenedor');
         const request = new sql.Request();
 
         // Usamos los valores desestructurados en la consulta
-        query = `SELECT * FROM BodegaMantenedor.dbo.RegistroInventario 
+        query = `SELECT * FROM DTEBodegaMantenedor.dbo.RegistroInventario 
             WHERE empresa = 'Makita' 
             AND ano = @periodo 
             AND mes = @mes 
-            AND tipoItem = @tipoItem 
+            AND tipoProducto = @tipoItem 
             AND local = @local`;
 
         // Prevenimos SQL Injection usando parámetros en la consulta
@@ -42,11 +42,10 @@ async function consultarInv(data) {
     }
 }
 
-
 async function validarInicioInventario(data) {
     const { periodo, mes } = data;
     const empresa = 'Makita';
-    await connectToDatabase('BodegaMantenedor');
+    await connectToDatabase('DTEBodegaMantenedor');
 
     try {
         logger.info(`Iniciamos la función iniciarInventario services ${periodo}  - ${mes}`);
@@ -88,7 +87,7 @@ async function registraInicioInventario(data) {
     try {
         logger.info(`Iniciamos la función iniciarInventario services`);
         
-        await connectToDatabase('BodegaMantenedor');
+        await connectToDatabase('DTEBodegaMantenedor');
         const request = new sql.Request();
 
         request.input('empresa', sql.VarChar(50), empresa);
@@ -128,7 +127,7 @@ async function getGrupoBodega(data) {
     try {
         
         logger.info(`Iniciamos la función getGrupoBodega services`);
-        await connectToDatabase('BodegaMantenedor');
+        await connectToDatabase('DTEBodegaMantenedor');
         const request = new sql.Request();
 
         // Usamos los valores desestructurados en la consulta
@@ -155,11 +154,19 @@ async function iniciarInventario(data) {
     const { periodo, mes, numeroLocal, grupoBodega, categorias } = data;
     const empresa = 'Makita';
 
+    console.log("=== Parámetros Recibidos ===");
+    console.log("Periodo:", periodo);
+    console.log("Mes:", mes);
+    console.log("Número de Local:", numeroLocal);
+    console.log("Grupo de Bodega:", grupoBodega);
+    console.log("Categorías:", categorias);
+    console.log("=============================");
+
     const mensaje = 'Inventario iniciado correctamente';
     try {
         logger.info(`Iniciamos la función iniciarInventario services`);
 
-        await connectToDatabase('BodegaMantenedor');
+        await connectToDatabase('DTEBodegaMantenedor');
 
         const resultados = [];
 
@@ -221,12 +228,39 @@ async function eliminarBitacoraInventario(empresa, periodo, mes, numeroLocal, gr
     }
 }
 
+async function actualizarConteo(data) {
+    const { periodo, mes, tipoItem, local } = data;  // Desestructuramos los valores del objeto 'data'
+    const empresa = 'Makita';
+    logger.info(`Iniciamos funcion para actualizarConteo`);
+    logger.info(`Parametros de entrada ${JSON.stringify(data)}`);
 
+    try {
+        await connectToDatabase('DTEBodegaMantenedor');
+        const request = new sql.Request();
+     
+        const result = await request
+        .input('Empresa', sql.VarChar(50), empresa)
+        .input('Agno', sql.Int, periodo)
+        .input('Mes', sql.Int, mes)
+        .input('TipoItem', sql.VarChar, tipoItem)
+        .input('Local', sql.VarChar, local)
+        .execute('sp_ActualizaAvance');
+    
+       
+        return { status: 200, data: result };
+    } catch (error) {
+        console.log("Error:", error);
+        return { status: 500, error: 'Error en el servidor al actualizar conteo' };
+    } finally {
+        await closeDatabaseConnection();
+    }
+}
 
 module.exports = {
     consultarInv,
     validarInicioInventario,
     registraInicioInventario,
     getGrupoBodega,
-    iniciarInventario
+    iniciarInventario,
+    actualizarConteo
 };

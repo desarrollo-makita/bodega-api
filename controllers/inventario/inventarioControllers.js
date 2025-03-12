@@ -151,7 +151,7 @@ async function deletetAsignacion(req, res) {
     
    
     try {
-      await connectToDatabase('BodegaMantenedor');
+      await connectToDatabase('DTEBodegaMantenedor');
         const { 
             Id, Empresa, FechaInventario, TipoInventario, Bodega, Clasif1, 
             Ubicacion, Item, Cantidad, Estado, Usuario, NombreDispositivo 
@@ -191,7 +191,7 @@ async function deletetAsignacion(req, res) {
   async function obtenerUltimaUbicacion(req, res) {
     try {
         // Conexión a la base de datos
-        await connectToDatabase('BodegaMantenedor');
+        await connectToDatabase('DTEBodegaMantenedor');
 
         // Obtener parámetros de la URL
         const { tipoinventario, tipoitem, usuario, fechainventario, bodega } = req.params;
@@ -205,7 +205,7 @@ async function deletetAsignacion(req, res) {
         // Crear la consulta SQL con parámetros
         const consulta = `
             SELECT DISTINCT ubicacion
-            FROM BodegaMantenedor.dbo.inventario
+            FROM DTEBodegaMantenedor.dbo.inventario
             WHERE TipoInventario = @tipoinventario
               AND clasif1 = @tipoitem
               AND NombreDispositivo = @usuario
@@ -213,7 +213,7 @@ async function deletetAsignacion(req, res) {
               AND Bodega = @bodega
               AND id IN (
                   SELECT MAX(id)
-                 FROM BodegaMantenedor.dbo.inventario
+                 FROM DTEBodegaMantenedor.dbo.inventario
                   WHERE TipoInventario = @tipoinventario
                     AND clasif1 = @tipoitem
                     AND NombreDispositivo = @usuario
@@ -264,7 +264,7 @@ async function deletetAsignacion(req, res) {
     logger.info(`Iniciamos función validarUbicacionProducto - ${JSON.stringify(req.params)}`);
 
     try {
-      await connectToDatabase('BodegaMantenedor');
+      await connectToDatabase('DTEBodegaMantenedor');
         const { fechainventario, item, ubicacion, usuario } = req.params;    
 
         const fechaFormateada = moment(fechainventario, ['YYYY-MM-DD', 'DD-MM-YYYY', 'MM-DD-YYYY']).format('YYYY-MM-DD');
@@ -317,7 +317,7 @@ async function deletetAsignacion(req, res) {
 
     try {
 
-      await connectToDatabase('BodegaMantenedor');
+      await connectToDatabase('DTEBodegaMantenedor');
         const { item, tipoitem } = req.params;    
 
         
@@ -396,12 +396,37 @@ async function consularGrupoBodega(req, res) {
   
         res.status(result.status).json(result);
     } catch (error) {
-        console.error("Error en asignarCapturador:", error);
+        console.error("Error en iniciarInventario:", error);
         res.status(500).json({ error: 'Error en el servidor al iniciar inventario' });
     } finally {
         await closeDatabaseConnection();
     }
   }
+
+  /**
+ * Retorna Consulta de inventario
+ * @param {*} req
+ * @param {*} res
+ */
+async function actualizarConteo(req, res) {
+  try {
+      console.log("parametros de entrada : " , req.body)
+
+      const data  = req.body
+      
+      logger.info(`Iniciamos la función consultarInventario - Controllers ${JSON.stringify(data)}`);
+    
+      const inventarioList = await inventarioService.actualizarConteo(data);
+
+      res.status(200).json(inventarioList);
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error en el servidor' });
+  } finally {
+    await closeDatabaseConnection();
+  }
+}
 
 
 module.exports = {
@@ -416,5 +441,6 @@ module.exports = {
     validarUbicacionProducto,
     validarTipoItem,
     consularGrupoBodega,
-    iniciarInventario
+    iniciarInventario,
+    actualizarConteo
   };

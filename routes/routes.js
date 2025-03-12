@@ -35,7 +35,8 @@ const {
   validarUbicacionProducto,
   validarTipoItem,
   consularGrupoBodega,
-  iniciarInventario
+  iniciarInventario,
+  actualizarConteo
 } = require('../controllers/inventario/inventarioControllers');
 
 
@@ -119,5 +120,7 @@ router.get('/insertar-inventario/:fechainventario/:item/:ubicacion/:usuario', va
 router.get('/insertar-inventario/:item/:tipoitem', validarTipoItem);
 router.get('/consultar-grupo-bodega' , consularGrupoBodega )
 router.post('/iniciar-inventario' , iniciarInventario )
+router.post('/actualizar-conteo' , actualizarConteo )
+
 
 module.exports = router;
