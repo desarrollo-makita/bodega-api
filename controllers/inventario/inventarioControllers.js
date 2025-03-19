@@ -67,8 +67,6 @@ async function asignarCapturador(req, res) {
  */
 async function consultarAsignacion(req, res) {
   try {
-      
-      
       logger.info(`Iniciamos la función consultarAsignacion - Controllers`);
     
       const asignacionList = await consultarAsignacionService.consultarAsignaicon();
@@ -139,7 +137,7 @@ async function deletetAsignacion(req, res) {
   
         res.status(result.status).json(result);
     } catch (error) {
-        console.error("Error en iniciarInventario:", error);
+        console.error("Error en validarInicioInventario:", error);
         res.status(500).json({ error: 'Error en el servidor al iniciar inventario' });
     } finally {
         await closeDatabaseConnection();
@@ -151,12 +149,12 @@ async function deletetAsignacion(req, res) {
     
    
     try {
-      await connectToDatabase('DTEBodegaMantenedor');
+      await connectToDatabase('BodegaMantenedor');
         const { 
             Id, Empresa, FechaInventario, TipoInventario, Bodega, Clasif1, 
             Ubicacion, Item, Cantidad, Estado, Usuario, NombreDispositivo 
         } = req.body;
-
+        console.log("req.body",req.body)
          // Verificar si algún campo está vacío, es null o undefined
         if (!Empresa || !FechaInventario || !TipoInventario || !Bodega || !Clasif1 || !Ubicacion || !Item || !Cantidad) {
             logger.error(`Error faltan parametros de entrada a la solicitud`);
@@ -191,7 +189,7 @@ async function deletetAsignacion(req, res) {
   async function obtenerUltimaUbicacion(req, res) {
     try {
         // Conexión a la base de datos
-        await connectToDatabase('DTEBodegaMantenedor');
+        await connectToDatabase('BodegaMantenedor');
 
         // Obtener parámetros de la URL
         const { tipoinventario, tipoitem, usuario, fechainventario, bodega } = req.params;
@@ -205,7 +203,7 @@ async function deletetAsignacion(req, res) {
         // Crear la consulta SQL con parámetros
         const consulta = `
             SELECT DISTINCT ubicacion
-            FROM DTEBodegaMantenedor.dbo.inventario
+            FROM BodegaMantenedor.dbo.inventario
             WHERE TipoInventario = @tipoinventario
               AND clasif1 = @tipoitem
               AND NombreDispositivo = @usuario
@@ -213,7 +211,7 @@ async function deletetAsignacion(req, res) {
               AND Bodega = @bodega
               AND id IN (
                   SELECT MAX(id)
-                 FROM DTEBodegaMantenedor.dbo.inventario
+                 FROM BodegaMantenedor.dbo.inventario
                   WHERE TipoInventario = @tipoinventario
                     AND clasif1 = @tipoitem
                     AND NombreDispositivo = @usuario
@@ -264,7 +262,7 @@ async function deletetAsignacion(req, res) {
     logger.info(`Iniciamos función validarUbicacionProducto - ${JSON.stringify(req.params)}`);
 
     try {
-      await connectToDatabase('DTEBodegaMantenedor');
+      await connectToDatabase('BodegaMantenedor');
         const { fechainventario, item, ubicacion, usuario } = req.params;    
 
         const fechaFormateada = moment(fechainventario, ['YYYY-MM-DD', 'DD-MM-YYYY', 'MM-DD-YYYY']).format('YYYY-MM-DD');
@@ -317,7 +315,7 @@ async function deletetAsignacion(req, res) {
 
     try {
 
-      await connectToDatabase('DTEBodegaMantenedor');
+      await connectToDatabase('BodegaMantenedor');
         const { item, tipoitem } = req.params;    
 
         
@@ -408,25 +406,51 @@ async function consularGrupoBodega(req, res) {
  * @param {*} req
  * @param {*} res
  */
-async function actualizarConteo(req, res) {
+async function actualizarConteoCierre(req, res) {
   try {
-      console.log("parametros de entrada : " , req.body)
+      console.log("parametros de entrada actualizarConteoCierre : " , req.body)
 
       const data  = req.body
       
-      logger.info(`Iniciamos la función consultarInventario - Controllers ${JSON.stringify(data)}`);
+      logger.info(`Iniciamos la función actualizarConteoCierre - Controllers ${JSON.stringify(data)}`);
     
-      const inventarioList = await inventarioService.actualizarConteo(data);
+      const inventarioList = await inventarioService.actualizarConteoCierre(data);
 
       res.status(200).json(inventarioList);
     
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Error en el servidor' });
+    res.status(500).json({ error: 'Error en el servidor actualizarConteoCierre' });
   } finally {
     await closeDatabaseConnection();
   }
 }
+
+  /**
+ * Retorna Consulta de inventario
+ * @param {*} req
+ * @param {*} res
+ */
+  async function actualizarConteoSinCierre(req, res) {
+    try {
+        console.log("parametros de entrada actualizarConteoSinCierre : " , req.body)
+  
+        const data  = req.body
+        
+        logger.info(`Iniciamos la función actualizarConteoSinCierre - Controllers ${JSON.stringify(data)}`);
+      
+        const inventarioList = await inventarioService.actualizarConteoSinCierre(data);
+  
+        res.status(200).json(inventarioList);
+      
+    } catch (error) {
+      console.error({ error: 'Error en el servidor actualizarConteoSinCierre' });
+      next(error);
+    } finally {
+      await closeDatabaseConnection();
+    }
+  }
+  
 
 
 module.exports = {
@@ -442,5 +466,6 @@ module.exports = {
     validarTipoItem,
     consularGrupoBodega,
     iniciarInventario,
-    actualizarConteo
+    actualizarConteoCierre,
+    actualizarConteoSinCierre
   };
