@@ -12,9 +12,9 @@ async function obtenerUbicacionItem(req, res) {
         await connectToDatabase('BdQMakita');
         // Construir la consulta utilizando el item como filtro
         const consulta = `SELECT texto2 AS Ubicacion, descripcion, item, tipoItem 
-            FROM Item 
+            FROM Item
+            empresa = 'makita' 
             WHERE Item = '${item}' 
-            AND vigencia = 'S' 
             AND tipoItem != '50-ITEMSU';`;
         logger.info(`Query que ejecuta:   - ${consulta}`);
         

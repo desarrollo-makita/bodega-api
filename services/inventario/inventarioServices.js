@@ -5,44 +5,65 @@ const logger = require('../../config/logger.js');
 
 
 async function consultarInv(data) {
+    let tipoProducto = '';
+    console.log('Datos recibidos:', data);  // Log para ver los datos de entrada
 
-    console.log(data);
     const { periodo, mes, tipoItem, local } = data;  // Desestructuramos los valores del objeto 'data'
+
+    console.log('Periodo:', periodo, 'Mes:', mes, 'TipoItem:', tipoItem, 'Local:', local);  // Log de los valores desestructurados
+
+    if (tipoItem === '01-HERRAMIENTAS') {
+        tipoProducto = 'HERRAMIENTAS';
+        console.log('Entro en el if de HERRAMIENTAS');
+    } else if (tipoItem === '03-ACCESORIOS') {
+        tipoProducto = 'ACCESORIOS';
+        console.log('Entro en el if de ACCESORIOS');
+    } else if (tipoItem === '04-REPUESTOS') {
+        tipoProducto = 'REPUESTOS';
+        console.log('Entro en el if de REPUESTOS');
+    } else {
+        console.log('El tipoItem no coincide con ninguno de los casos previstos:', tipoItem);
+    }
 
     let query;
 
     try {
-        
         logger.info(`Iniciamos la función consultarInv services`);
         await connectToDatabase('BodegaMantenedor');
         const request = new sql.Request();
 
-        // Usamos los valores desestructurados en la consulta
+        // Log para ver la consulta antes de ejecutarse
+        console.log(`Ejecutamos la consulta con los parámetros: periodo=${periodo}, mes=${mes}, tipoItem=${tipoItem}, local=${local}, tipoProducto=${tipoProducto}`);
+
         query = `SELECT * FROM BodegaMantenedor.dbo.RegistroInventario 
             WHERE empresa = 'MAKITA' 
             AND ano = @periodo 
             AND mes = @mes 
             AND tipoItem = @tipoItem 
-            AND local = @local`;
+            AND local = @local
+            AND TipoProducto = @tipoProducto`;
 
         // Prevenimos SQL Injection usando parámetros en la consulta
         request.input('periodo', sql.Int, periodo);
         request.input('mes', sql.Int, mes);
         request.input('tipoItem', sql.VarChar, tipoItem);
         request.input('local', sql.VarChar, local);
+        request.input('tipoProducto', sql.VarChar, tipoProducto);  // Asegúrate de agregar esta línea
 
         logger.info(`Ejecutamos la query de Inventario: ${query}`);
 
         const inventarioResponse = await request.query(query);
 
+       // console.log('Respuesta del inventario:', inventarioResponse);  // Log de la respuesta de la base de datos
         return { status: 200, data: inventarioResponse };
     } catch (error) {
-        console.log("Error:", error);
+        console.log("Error:", error);  // Log del error
         return { status: 500, error: 'Error en el servidor al consultar inventario' };
     } finally {
         await closeDatabaseConnection();
     }
 }
+
 
 async function validarInicioInventario(data) {
     const { periodo, mes } = data;
