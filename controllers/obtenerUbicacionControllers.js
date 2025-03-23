@@ -13,8 +13,8 @@ async function obtenerUbicacionItem(req, res) {
         // Construir la consulta utilizando el item como filtro
         const consulta = `SELECT texto2 AS Ubicacion, descripcion, item, tipoItem 
             FROM Item
-            empresa = 'makita' 
             WHERE Item = '${item}' 
+            and  empresa = 'makita' 
             AND tipoItem != '50-ITEMSU';`;
         logger.info(`Query que ejecuta:   - ${consulta}`);
         
