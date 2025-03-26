@@ -278,7 +278,7 @@ async function actualizarConteoCierre(data) {
         logger.info(`Parámetros enviados -> Empresa: ${empresa}, Periodo: ${periodo}, Mes: ${mes}, TipoItem: ${tipoItem}, Local: ${local}, Grupo: ${grupo}`);
 
         // Log de la respuesta de la base de datos
-        logger.info(`Respuesta de la base de datos: ${JSON.stringify(result)}`);
+        logger.info(`Respuesta de la base de datos: ${JSON.stringify(result.returnValue)}`);
 
         const returnValue = result.returnValue; // Si no devuelve nada, asumimos 0
 
@@ -321,7 +321,7 @@ async function actualizarConteoSinCierre(data) {
         .input('Grupo', sql.Int, grupo)
         .execute('sp_ActualizaAvanceSincierre');
         
-        logger.info(`Finalizó la ejecución de sp_ActualizaAvanceSincierre ${result}`);
+        logger.info(`Finalizó la ejecución de sp_ActualizaAvanceSincierre ${result.returnValue}`);
        
         return { status: 200,   message: "Actualización realizada con éxito.", };
     } catch (error) {
