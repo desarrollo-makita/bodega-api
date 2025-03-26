@@ -21,7 +21,8 @@ async function obtenerListaKit(req, res) {
         
         
         // Consulta SQL para insertar datos
-        const query = `SELECT tipoitem  , item , Clasif7 , Clasif9 from Item where Empresa  = 'Makita'  and clasif7  = '${item}'`;
+        const query = `
+        SELECT tipoitem  , item , Clasif7 , Clasif9 from Item where Empresa  = 'Makita'  and Item like '%${item}%' and Vigencia  = 'S'`;
 
         
         console.log("query: ", query); 
@@ -32,10 +33,11 @@ async function obtenerListaKit(req, res) {
         console.log("result: ", result.recordset);  
 
         const filteredItems = result.recordset.filter(item => item.tipoitem.includes("02-KIT"));
+        console.log("filteredItems: ", filteredItems);
         // Devolver el resultado de la consulta
         res.status(200).json(filteredItems);
 
-        logger.info(`Fin de la funcion obtenerListaKit`);
+        logger.info(`Fin de la funcion obtenerListaKit ${filteredItems}`);
         
     } catch (error) {
         // Manejar errores
