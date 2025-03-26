@@ -254,33 +254,53 @@ async function eliminarBitacoraInventario(empresa, periodo, mes, numeroLocal, gr
 }
 
 async function actualizarConteoCierre(data) {
-    const { periodo, mes, tipoItem, local , grupo } = data;  // Desestructuramos los valores del objeto 'data'
-    const empresa = 'Makita';
-    logger.info(`Iniciamos funcion para actualizarConteoCierre`);
-    logger.info(`Parametros de entrada ${JSON.stringify(data)}`);
+    const { periodo, mes, tipoItem, local, grupo } = data; // Desestructuración
+    const empresa = 'makita';
+
+    logger.info(`========== INICIO: Actualización de Conteo Cierre ==========`);  
+    logger.info(`Parámetros de entrada: ${JSON.stringify(data)}`);
 
     try {
         await connectToDatabase('BodegaMantenedor');
+        logger.info(`Conexión a la base de datos establecida correctamente.`);
+
         const request = new sql.Request();
-     
         const result = await request
-        .input('Empresa', sql.VarChar(50), empresa)
-        .input('Agno', sql.Int, periodo)
-        .input('Mes', sql.Int, mes)
-        .input('TipoItem', sql.VarChar, tipoItem)
-        .input('Local', sql.VarChar, local)
-        .input('Grupo', sql.Int, grupo)
-        .execute('sp_ActualizaAvance');
-    
-       
-        return { status: 200, data: result };
+            .input('Empresa', sql.VarChar(50), empresa)
+            .input('Agno', sql.VarChar(50), periodo)
+            .input('Mes', sql.Int, mes)
+            .input('TipoItem', sql.VarChar, tipoItem)
+            .input('Local', sql.VarChar, local)
+            .input('Grupo', sql.Int, grupo)
+            .execute('sp_ActualizaAvance');
+
+        logger.info(`Procedimiento almacenado ejecutado: sp_ActualizaAvance`);
+        logger.info(`Parámetros enviados -> Empresa: ${empresa}, Periodo: ${periodo}, Mes: ${mes}, TipoItem: ${tipoItem}, Local: ${local}, Grupo: ${grupo}`);
+
+        // Log de la respuesta de la base de datos
+        logger.info(`Respuesta de la base de datos: ${JSON.stringify(result)}`);
+
+        const returnValue = result.returnValue; // Si no devuelve nada, asumimos 0
+
+        if (returnValue !== 0) {
+            logger.warn(`Procedimiento almacenado retornó un código inesperado: ${returnValue}`);
+            return { status: 400, error: `Error en SP: Código ${returnValue}` };
+        }
+
+        logger.info(`Procedimiento almacenado ejecutado correctamente.`);
+        return { status: 200, mensaje: 'Inventario cerrado exitosamente' };
+
     } catch (error) {
-        console.log("Error:", error);
+        
+        logger.error(` Error en actualizarConteoCierre: ${error.message}`);
         return { status: 500, error: 'Error en el servidor al actualizar conteo' };
     } finally {
         await closeDatabaseConnection();
+        logger.info(`Conexión a la base de datos cerrada correctamente.`);
+        logger.info(`========== FIN: Actualización de Conteo Cierre ==========`);
     }
 }
+
 
 async function actualizarConteoSinCierre(data) {
     const { periodo, mes, tipoItem, local , grupo } = data;  // Desestructuramos los valores del objeto 'data'
@@ -294,7 +314,7 @@ async function actualizarConteoSinCierre(data) {
      
         const result = await request
         .input('Empresa', sql.VarChar(50), empresa)
-        .input('Agno', sql.Int, periodo)
+        .input('Agno', sql.VarChar(50), periodo.toString())
         .input('Mes', sql.Int, mes)
         .input('TipoItem', sql.VarChar, tipoItem)
         .input('Local', sql.VarChar, local)
