@@ -452,6 +452,24 @@ async function actualizarConteoCierre(req, res) {
   }
   
 
+    async function validarCierreInventario(req, res) {
+    try {
+        console.log("Parámetros de entrada:", req.query);
+      
+        const data = req.query;
+  
+        logger.info(`Iniciamos la función validarCierreInventario - Controllers ${JSON.stringify(data)}`);
+  
+        const result = await inventarioService.validarCierreInventario(data);
+  
+        res.status(result.status).json(result);
+    } catch (error) {
+        console.error("Error en validarInicioInvevalidarCierreInventariontario:", error);
+        res.status(500).json({ error: 'Error en el servidor al validarCierreInventario' });
+    } finally {
+        await closeDatabaseConnection();
+    }
+  }
 
 module.exports = {
     consultarInventario,
@@ -467,5 +485,6 @@ module.exports = {
     consularGrupoBodega,
     iniciarInventario,
     actualizarConteoCierre,
-    actualizarConteoSinCierre
+    actualizarConteoSinCierre,
+    validarCierreInventario
   };

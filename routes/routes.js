@@ -37,7 +37,8 @@ const {
   consularGrupoBodega,
   iniciarInventario,
   actualizarConteoCierre,
-  actualizarConteoSinCierre
+  actualizarConteoSinCierre,
+  validarCierreInventario
   
 } = require('../controllers/inventario/inventarioControllers');
 
@@ -114,7 +115,7 @@ router.get('/consultar-inventario' , consultarInventario )
 router.post('/asignar-capturador' , asignarCapturador )
 router.get('/consultar-asignacion' , consultarAsignacion )
 router.delete('/delete-asignacion',  deletetAsignacion);
-router.get('/validar-inicio-inventario/:periodo/:mes',  validarInicioInventario); // no se usa
+router.get('/validar-inicio-inventario/:periodo/:mes',  validarInicioInventario);
 router.get('/consultar-asignacion-filtro/:capturador/:mes/:periodo',  consultarAsignacionFiltro);
 router.post('/insertar-inventario/', insertarInventario);
 router.get('/insertar-inventario/:tipoinventario/:tipoitem/:usuario/:fechainventario/:bodega', obtenerUltimaUbicacion);
@@ -124,6 +125,7 @@ router.get('/consultar-grupo-bodega' , consularGrupoBodega )
 router.post('/iniciar-inventario' , iniciarInventario )
 router.post('/actualizar-conteo-cierre' , actualizarConteoCierre )
 router.post('/actualizar-conteo-sin-cierre' , actualizarConteoSinCierre )
+router.get('/validar-cierre-inventario',  validarCierreInventario);
 
 
 module.exports = router;

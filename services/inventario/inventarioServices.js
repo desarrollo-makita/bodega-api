@@ -54,8 +54,15 @@ async function consultarInv(data) {
 
         const inventarioResponse = await request.query(query);
 
-       // console.log('Respuesta del inventario:', inventarioResponse);  // Log de la respuesta de la base de datos
-        return { status: 200, data: inventarioResponse };
+        console.log("=== Respuesta de la base de datos ===");
+        console.log("inventarioResponse",inventarioResponse);  
+        
+        if(inventarioResponse.recordset.length === 0) {
+            return { status: 200, data: inventarioResponse  , info : { mensaje: `No ha iniciado el inventario para el periodo ${mes} del  ${periodo}  , Por favor, inicie inventario para periodo , tipo item y local ingresado`, estado: 0 } };
+        }else{
+            return { status: 200, data: inventarioResponse };
+        }
+  
     } catch (error) {
         console.log("Error:", error);  // Log del error
         return { status: 500, error: 'Error en el servidor al consultar inventario' };
@@ -284,16 +291,16 @@ async function actualizarConteoCierre(data) {
 
         if (returnValue !== 0) {
             logger.warn(`Procedimiento almacenado retornó un código inesperado: ${returnValue}`);
-            return { status: 400, error: `Error en SP: Código ${returnValue}` };
+            return { status: 400, error: `Error en SP: Código ${returnValue}` , codigo: returnValue };
         }
 
         logger.info(`Procedimiento almacenado ejecutado correctamente.`);
-        return { status: 200, mensaje: 'Inventario cerrado exitosamente' };
+        return { status: 200, mensaje: 'Inventario cerrado exitosamente' , codigo: returnValue };
 
     } catch (error) {
         
         logger.error(` Error en actualizarConteoCierre: ${error.message}`);
-        return { status: 500, error: 'Error en el servidor al actualizar conteo' };
+        return { status: 500, error: 'Error en el servidor al actualizar conteo' , codigo: 1 };
     } finally {
         await closeDatabaseConnection();
         logger.info(`Conexión a la base de datos cerrada correctamente.`);
@@ -332,6 +339,53 @@ async function actualizarConteoSinCierre(data) {
     }
 }
 
+async function validarCierreInventario(data) {
+    const { periodo, mes, tipoItem, local } = data;
+    const empresa = 'Makita';
+    const accion = 'CIERREINV'
+    await connectToDatabase('BodegaMantenedor');
+
+    try {
+        logger.info(`Iniciamos la función validarCierreInventario services ${periodo}  - ${mes} - ${tipoItem}- ${local}` );
+
+        const request = new sql.Request();
+
+        // Parámetros para el query
+        request.input('empresa', sql.VarChar(50), empresa);
+        request.input('periodo', sql.Int, periodo);
+        request.input('mes', sql.Int, mes);
+        request.input('accion',sql.VarChar(80), accion);
+        request.input('tipoItem', sql.VarChar(80), tipoItem);
+        request.input('local', sql.VarChar(80), local);
+
+        logger.info(`Ejecutamos el SELECT en la tabla bitacoraInventario`);
+
+        // Ejecutar la consulta
+        const result = await request.query(`
+            SELECT * 
+            FROM bitacoraInventario 
+            WHERE empresa = @empresa 
+            AND mes = @mes 
+            AND agno = @periodo
+            AND accion = @accion
+            AND tipoItem = @tipoItem
+            AND local = @local
+        `);
+
+        logger.info(`Consulta ejecutada correctamente, registros encontrados: ${result}`);
+        if(result.recordset.length === 0){
+            return { status: 200, data:{mensaje:'sin registro de cierre' , estado: 0} };
+        }else{
+            return { status: 200, data: result.recordset[0] };
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        return { status: 500, error: 'Error en el servidor al validarCierreInventario' };
+    } finally {
+        await closeDatabaseConnection();
+    }
+}
+
 module.exports = {
     consultarInv,
     validarInicioInventario,
@@ -339,5 +393,6 @@ module.exports = {
     getGrupoBodega,
     actualizarConteoCierre,
     actualizarConteoSinCierre,
-    iniciarInventario
+    iniciarInventario,
+    validarCierreInventario
 };
