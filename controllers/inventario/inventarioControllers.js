@@ -10,6 +10,7 @@ const asignarCapturadorService = require('../../services/inventario/asignarCaptu
 const consultarAsignacionService = require('../../services/inventario/consultarAsignacionServices.js')
 const eliminarAsignacionService = require('../../services/inventario/eliminarAsignacionServices.js')
 const consultarAsignacionFiltroService = require('../../services/inventario/consultarAsignacionFiltroServices.js')
+const asignarReconteosService = require('../../services/inventario/asignarReconteosServices.js')
 
 /**
  * Retorna Consulta de inventario
@@ -102,7 +103,7 @@ async function deletetAsignacion(req, res) {
 }
 
 
-  async function consultarAsignacionFiltro(req, res) {
+async function consultarAsignacionFiltro(req, res) {
    try {
      
       const { capturador , mes, periodo } = req.params;
@@ -123,7 +124,7 @@ async function deletetAsignacion(req, res) {
     } finally {
       await closeDatabaseConnection();
     }
-  }
+}
 
   async function validarInicioInventario(req, res) {
     try {
@@ -452,7 +453,7 @@ async function actualizarConteoCierre(req, res) {
   }
   
 
-    async function validarCierreInventario(req, res) {
+  async function validarCierreInventario(req, res) {
     try {
         console.log("Parámetros de entrada:", req.query);
       
@@ -471,6 +472,30 @@ async function actualizarConteoCierre(req, res) {
     }
   }
 
+    /**
+ * Asigna un reconteos a un usuario
+ * @param {*} req
+ * @param {*} res
+ */
+async function obtenerItemsreconteos(req, res) {
+  try {
+      console.log("Parámetros de entrada:", req.body);
+
+      const data = req.body;
+
+      logger.info(`Iniciamos la función obtenerItemsreconteos - Controllers ${JSON.stringify(data)}`);
+
+      const result = await asignarReconteosService.obtenerReconteos(data);
+
+      res.status(result.status).json(result);
+  } catch (error) {
+      console.error("Error en obtenerItemsreconteos:", error);
+      res.status(500).json({ error: 'Error en el servidor al extraer data de consulta ' });
+  } finally {
+      await closeDatabaseConnection();
+  }
+}
+
 module.exports = {
     consultarInventario,
     asignarCapturador,
@@ -486,5 +511,6 @@ module.exports = {
     iniciarInventario,
     actualizarConteoCierre,
     actualizarConteoSinCierre,
-    validarCierreInventario
+    validarCierreInventario,
+    obtenerItemsreconteos
   };
