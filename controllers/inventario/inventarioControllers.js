@@ -472,6 +472,25 @@ async function actualizarConteoCierre(req, res) {
     }
   }
 
+  async function iniciarReconteos(req, res) {
+    try {
+        console.log("Parámetros de entrada iniciarReconteos :", req.body);
+  
+        const data = req.body;
+  
+        logger.info(`Iniciamos la función iniciarReconteos - Controllers ${JSON.stringify(data)}`);
+  
+        const result = await asignarReconteosService.iniciarReconteo(data);
+  
+        res.status(result.status).json(result);
+    } catch (error) {
+        console.error("Error en obtenerItemsreconteos:", error);
+        res.status(500).json({ error: 'Error en el servidor al iniciarReconteos ' });
+    } finally {
+        await closeDatabaseConnection();
+    }
+  }
+
     /**
  * Asigna un reconteos a un usuario
  * @param {*} req
@@ -512,5 +531,6 @@ module.exports = {
     actualizarConteoCierre,
     actualizarConteoSinCierre,
     validarCierreInventario,
-    obtenerItemsreconteos
+    obtenerItemsreconteos,
+    iniciarReconteos
   };

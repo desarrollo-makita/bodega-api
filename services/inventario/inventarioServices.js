@@ -51,7 +51,7 @@ async function consultarInv(data) {
         const inventarioResponse = await request.query(query);
 
         console.log("=== Respuesta de la base de datos ===");
-        console.log("inventarioResponse",inventarioResponse);  
+       // console.log("inventarioResponse",inventarioResponse);  
         
         if(inventarioResponse.recordset.length === 0) {
             return { status: 200, data: inventarioResponse  , info : { mensaje: `No ha iniciado el inventario para el periodo ${fechaInventario}, Por favor, inicie inventario para periodo , tipo item y local ingresado`, estado: 0 } };
@@ -282,7 +282,7 @@ async function actualizarConteoCierre(data) {
         logger.info(`Parámetros enviados -> Empresa: ${empresa}, Periodo: ${periodo}, Mes: ${mes}, TipoItem: ${tipoItem}, Local: ${local}, Grupo: ${grupo}`);
 
         // Log de la respuesta de la base de datos
-        logger.info(`Respuesta de la base de datos: ${JSON.stringify(result.returnValue)}`);
+        // logger.info(`Respuesta de la base de datos: ${JSON.stringify(result.returnValue)}`);
 
         const returnValue = result.returnValue; // Si no devuelve nada, asumimos 0
 

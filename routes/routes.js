@@ -39,11 +39,18 @@ const {
   actualizarConteoCierre,
   actualizarConteoSinCierre,
   validarCierreInventario,
-  obtenerItemsreconteos
+  obtenerItemsreconteos,
+  iniciarReconteos
   
 } = require('../controllers/inventario/inventarioControllers');
 
-const {asignarReconteos} = require('../controllers/inventario/reconteosControllers');
+const {
+  asignarReconteos , 
+  validarCantidadReconteos,
+  insertarReconteo,
+  obtenerReconteo,  
+  obtenerGrupoBodega} = require('../controllers/inventario/reconteosControllers');
+
 
 
 
@@ -114,9 +121,9 @@ router.delete('/elimina-data-kit-detalle', eliminarDataKitDetalle);
 router.delete('/elimina-data-cabecera-kit', eliminarItemKitCabecera);
 
 //inventario
-router.get('/consultar-inventario' , consultarInventario )
-router.post('/asignar-capturador' , asignarCapturador )
-router.get('/consultar-asignacion' , consultarAsignacion )
+router.get('/consultar-inventario' , consultarInventario );
+router.post('/asignar-capturador' , asignarCapturador );
+router.get('/consultar-asignacion' , consultarAsignacion );
 router.delete('/delete-asignacion',  deletetAsignacion);
 router.get('/validar-inicio-inventario/:fechaInventario',  validarInicioInventario);
 router.get('/consultar-asignacion-filtro/:capturador/:mes/:periodo',  consultarAsignacionFiltro);
@@ -124,13 +131,19 @@ router.post('/insertar-inventario/', insertarInventario);
 router.get('/insertar-inventario/:tipoinventario/:tipoitem/:usuario/:fechainventario/:bodega', obtenerUltimaUbicacion);
 router.get('/insertar-inventario/:fechainventario/:item/:ubicacion/:usuario', validarUbicacionProducto);
 router.get('/insertar-inventario/:item/:tipoitem', validarTipoItem);
-router.get('/consultar-grupo-bodega' , consularGrupoBodega )
-router.post('/iniciar-inventario' , iniciarInventario )
-router.post('/actualizar-conteo-cierre' , actualizarConteoCierre )
-router.post('/actualizar-conteo-sin-cierre' , actualizarConteoSinCierre )
+router.get('/consultar-grupo-bodega' , consularGrupoBodega );
+router.post('/iniciar-inventario' , iniciarInventario );
+router.post('/actualizar-conteo-cierre' , actualizarConteoCierre );
+router.post('/actualizar-conteo-sin-cierre' , actualizarConteoSinCierre );
 router.get('/validar-cierre-inventario',  validarCierreInventario);
-router.post('/consultar-reconteos' , obtenerItemsreconteos )
-router.post('/asignar-reconteos' , asignarReconteos )
+router.post('/consultar-reconteos' , obtenerItemsreconteos );
+router.post('/asignar-reconteos' , asignarReconteos );
+router.post('/iniciar-reconteos' , iniciarReconteos );
+router.get('/validar-cantidad-reconteos',  validarCantidadReconteos);
+
+router.post('/insertar-inventario-reconteo/', insertarReconteo);
+router.get('/insertar-inventario/:empresa/:agno/:mes/:tipoinventario/:numerolocal/:tipoitem/:usuario/:grupobodega', obtenerReconteo);
+router.get('/insertar-inventario-grupo/:empresa/:NumeroLocal', obtenerGrupoBodega);
 
 
 module.exports = router;
