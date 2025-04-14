@@ -101,7 +101,7 @@ router.post('/insertar-datos-capturados', insertarCapturas);
 router.post('/insertar-datos-capturados-accesorios', insertarCapturasAccesorios);
 router.put('/update-glosa-solicitado', updateSolicitadoCaptura);
 
-//Herramientas
+//generacion pdf417 etiquetado
 router.get('/generar-etiquetaC/:Item', obtenerHerramienta);
 
 //Consulta stock por item bodega 02

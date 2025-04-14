@@ -113,7 +113,9 @@ async function getPickingList(area) {
         return { status: 404, error: 'No existen picking para mostrar' };
       }
 
-      const responsePickingList = listaPicking.recordset.filter(item => item.Total_Items !== 0);
+      console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxx",listaPicking.recordset);
+     // const responsePickingList = listaPicking.recordset.filter(item => item.Total_Items !== 0);
+      const responsePickingList = listaPicking.recordset;
 
       if (responsePickingList.length === 0) {
         return { status: 404, error: 'No existen picking con Total_Items mayor a 0' };
