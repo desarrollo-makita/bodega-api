@@ -51,6 +51,54 @@ async function iniciarReconteo(data) {
     }
 }
 
+async function siguienteReconteo(data) {
+    const { local, bodega, fechaInventario, tipoItem } = data;
+
+    const [anio, mesStr] = fechaInventario.split('-');
+    const mes = parseInt(mesStr);
+    const periodo = parseInt(anio);
+    
+    const empresa = 'Makita';
+
+    const data2 = {
+        empresa,
+        local,
+        bodega,
+        fechaInventario,
+        tipoItem,
+        mes,
+        periodo
+    };
+
+    console.log("Iniciamos la función siguienteReconteo services", data2);
+
+    try {
+        await connectToDatabase('BodegaMantenedor');
+        const request = new sql.Request();
+
+        const result = await request
+            .input('Empresa', sql.VarChar(50), data2.empresa)
+            .input('Agno', sql.VarChar(50), data2.periodo.toString())
+            .input('Mes', sql.Int, data2.mes)
+            .input('FechaInventario', sql.Date, data2.fechaInventario)
+            .input('Local', sql.VarChar, data2.local)
+            .input('Grupo', sql.Int, data2.bodega)
+            .input('TipoItem', sql.VarChar, data2.tipoItem)
+            .output('NumeroID', sql.Int)
+            .output('MensajeID', sql.Varchar)
+            .execute('sp_GenerarSiguienteReconteo');
+
+        logger.info(`Finalizó la ejecución de sp_GenerarSiguienteReconteo ${JSON.stringify(result)}`);
+
+        return { status: 200, message: "Actualización realizada con éxito." };
+    } catch (error) {
+        console.log("Error:", error);
+        return { status: 500, error: 'Error en el servidor al sp_GenerarSiguienteReconteo' };
+    } finally {
+        await closeDatabaseConnection();
+    }
+}
+
 
 async function obtenerReconteos(data) {
     const { local, bodega, fechaInventario, tipoItem } = data;
@@ -135,69 +183,155 @@ async function obtenerReconteos(data) {
     }
 }
 
-
-
-async function asignarReconteos(data) {
-    const listaReconteos = data;
-
+async function asignarReconteos2(data) {
     try {
-        logger.info(`Iniciamos la función iniciarInventario services ${listaReconteos}`);
+        console.log('Iniciamos la función asignarReconteos services');
 
+        // Agrupar los datos por nombre
+        const listaReconteos = data;
+        const nombres = [...new Set(listaReconteos.map(item => item.nombre))]; // Extraemos los nombres únicos
+
+        console.log('Conexión a la base de datos establecida.');
         await connectToDatabase('BodegaMantenedor');
 
-        // 1. Convertir JSON a XML
-        const jsonParaXml = {
-            Reconteos: {
-                Persona: listaReconteos.map(item => ({
-                    nombre: item.nombre,
-                    Datos: {
-                        Dato: item.data.map(dato => ({
-                            Id: dato.Id,
-                            Empresa: dato.Empresa,
-                            Agno: dato.Agno,
-                            Mes: dato.Mes,
-                            FechaInventario: dato.FechaInventario,
-                            TipoInventario: dato.TipoInventario,
-                            NumeroReconteo: dato.NumeroReconteo,
-                            NumeroLocal: dato.NumeroLocal,
-                            GrupoBodega: dato.GrupoBodega,
-                            Clasif1: dato.Clasif1,
-                            Ubicacion: dato.Ubicacion,
-                            Item: dato.Item,
-                            Cantidad: dato.Cantidad,
-                            Estado: dato.Estado,
-                            Usuario: dato.Usuario,
-                            NombreDispositivo: dato.NombreDispositivo
+        // Procesar cada grupo de datos por nombre
+        for (let nombre of nombres) {
+            console.log(`Procesando datos para el nombre: ${nombre}`);
+
+            // Filtrar los datos por nombre
+            const datosPorNombre = listaReconteos.filter(item => item.nombre === nombre);
+
+            // Dividir los datos en lotes de 10
+            const lotes = divideEnLotes(datosPorNombre, 100);  // Experimenta con tamaños más pequeños si es necesario
+            console.log(`Datos divididos en ${lotes.length} lotes de 10 registros cada uno para el nombre: ${nombre}.`);
+
+            // Procesar los lotes en paralelo usando Promise.all
+            const lotePromises = lotes.map(async (lote, index) => {
+                console.log(`Procesando lote ${index + 1} de ${lotes.length} con ${lote.length} registros.`);
+
+                // Filtrar solo los campos necesarios
+                const jsonParaXml = {
+                    Reconteos: {
+                        Persona: lote.map(item => ({
+                            nombre: item.nombre,
+                            Datos: {
+                                Dato: item.data.map(dato => ({
+                                    Id: dato.Id,
+                                    Empresa: dato.Empresa,
+                                    Agno: dato.Agno,
+                                    Mes: dato.Mes,
+                                    FechaInventario: dato.FechaInventario,
+                                }))
+                            }
                         }))
                     }
-                }))
-            }
-        };
-        
+                };
 
-        const opciones = { compact: true, ignoreComment: true, spaces: 4 };
-        
-        const xmlFinal = js2xml(jsonParaXml, opciones);
+                // Convertir el objeto JSON a XML usando js2xml
+                const opciones = { compact: true, ignoreComment: true, spaces: 4 };
+                const xmlFinal = js2xml(jsonParaXml, opciones);
 
+                console.log(`XML generado para el lote ${index + 1}. Tamaño del XML: ${xmlFinal.length} caracteres.`);
 
-        logger.info('XML generado:', xmlFinal); // Opcional: puedes comentarlo si es muy largo
-        console.log("XML generado:\n", xmlFinal);
+                // Enviar el XML al procedimiento almacenado
+                const request = new sql.Request();
+                request.input('ListaDatos', sql.XML, xmlFinal);
 
-        // 2. Enviar el XML al SP
-        const request = new sql.Request();
-        request.input('ListaDatos', sql.XML, xmlFinal);
+                // Ejecutar el procedimiento almacenado
+                const result = await request.execute('ActualizarUsuariosReconteo');
+                console.log(`Resultado del SP para el lote ${index + 1}:`, result);
 
+                console.log(`Lote ${index + 1} procesado exitosamente.`);
+            });
 
-        // Aquí llamaremos al SP cuando lo tengas listo
-        const result = await request.execute('ActualizarUsuariosReconteo'); // Asegúrate de que el nombre del SP sea correcto
-        logger.info('Resultado del SP:', result);
+            // Esperamos que todos los lotes del nombre se procesen en paralelo
+            await Promise.all(lotePromises);
+        }
 
-        logger.info(`Finalizó la ejecución del procedimiento almacenado ActualizarUsuariosReconteo`);
+        console.log(`Finalizó la ejecución del procedimiento almacenado ActualizarUsuariosReconteo`);
 
-        return { status: 200, message: 'XML generado y enviado al SP (cuando esté listo)' };
+        return { status: 200, message: 'XML generado y enviado al SP' };
+
     } catch (error) {
         console.error("Error:", error);
         return { status: 500, error: 'Error en el servidor al asignar reconteos' };
+    }
+}
+
+
+async function asignarReconteos(data) {
+    try {
+        console.log('Iniciamos la función asignarReconteos services' , data);
+
+        // Agrupar los datos por nombre
+        const listaReconteos = data;
+
+        console.log('Conexión a la base de datos establecida.');
+        await connectToDatabase('BodegaMantenedor'); // Establecer conexión con la base de datos
+
+        // Procesar cada grupo de datos por nombre
+        for (let reconteo of listaReconteos) {
+            console.log(`Procesando reconteo de ${reconteo.nombre}`);
+            const { nombre , cantidad} = reconteo;
+            const cantidadFinal = cantidad === undefined ? 1 : cantidad;
+            // Iterar sobre los elementos en el arreglo 'data' dentro de cada grupo
+            for (let itemData of reconteo.data) {
+                const item = itemData.Item; // Obtener el Item de cada objeto
+                console.log(`Procesando el Item: ${item}`);
+                
+                // Aquí realizamos directamente el UPDATE
+                try {
+                    const request = new sql.Request(); // Crear la solicitud SQL
+                    
+                    // Obtener los valores que necesitas para el UPDATE
+                    const { Item } = itemData;
+
+                    console.log(`
+                        UPDATE reconteos
+                        SET usuario = '${nombre}'
+                        FROM reconteos r
+                        INNER JOIN BodegaMantenedor.dbo.asignaCapturador A ON A.Usuario = '${nombre}'
+                        WHERE r.Item = '${Item}'
+                        and numeroReconteo = '${cantidadFinal}'
+                    `);
+
+                    // Crear la consulta SQL de actualización
+                    const query = `
+                        UPDATE reconteos
+                            SET usuario = @nombre,
+                            NombreDispositivo = A.Capturador
+                            FROM reconteos r
+                            INNER JOIN BodegaMantenedor.dbo.asignaCapturador A ON A.Usuario = @nombre
+                            WHERE r.Item = @Item
+                            and numeroReconteo = @cantidadFinal
+                    `;
+
+                    // Asignamos los parámetros para evitar inyecciones SQL
+                    request.input('Item', sql.NVarChar, Item); // El parámetro para identificar el 'Item'
+                    request.input('nombre', sql.NVarChar, nombre);
+                    request.input('cantidadFinal', sql.Int, cantidadFinal);  
+                    // Ejecutar la consulta SQL
+                    const result = await request.query(query);
+
+                    // Verificar si se actualizó algún registro
+                    if (result.rowsAffected > 0) {
+                        console.log(`Reconteo para el item ${item} procesado correctamente.`);
+                    } else {
+                        console.log(`No se pudo procesar el reconteo para el item ${item}.`);
+                    }
+                } catch (error) {
+                    console.error(`Error al procesar el item ${item}:`, error);
+                }
+            }
+        }
+
+        return { status: 200, message: 'Reconteos procesados correctamente.' };
+
+    } catch (error) {
+        console.error("Error:", error);
+        return { status: 500, error: 'Error al procesar los reconteos.' };
+    }finally{
+        await closeDatabaseConnection(); // Cerrar la conexión a la base de datos
     }
 }
 
@@ -275,6 +409,8 @@ module.exports = {
     obtenerReconteos,
     asignarReconteos,
     iniciarReconteo,
-    validarCantidadReconteos
+    validarCantidadReconteos,   
+    siguienteReconteo
+
     
 };

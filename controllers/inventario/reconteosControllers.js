@@ -3,7 +3,6 @@ const { connectToDatabase, closeDatabaseConnection } = require('../../config/dat
 const sql = require('mssql');
 require('dotenv').config();
 const moment = require('moment');
-const { connectToDatabase, closeDatabaseConnection } = require('../../config/database.js');
 
 const asignarReconteosService = require('../../services/inventario/asignarReconteosServices.js')
   /**
@@ -12,11 +11,11 @@ const asignarReconteosService = require('../../services/inventario/asignarRecont
  */
 async function asignarReconteos(req, res) {
   try {
-      console.log("Parámetros de entrada:", req.body);
+     // console.log("Parámetros de entrada:", req.body);
 
       const data = req.body;
 
-      logger.info(`Iniciamos la función asignarReconteos - Controllers ${JSON.stringify(data)}`);
+    //  logger.info(`Iniciamos la función asignarReconteos - Controllers ${JSON.stringify(data)}`);
 
       const result = await asignarReconteosService.asignarReconteos(data);
 
@@ -191,8 +190,9 @@ async function obtenerReconteo(req, res) {
 }
 
 async function obtenerGrupoBodega(req, res) {
-    logger.info(`Iniciamos funcion obtenerGrupoBodega XXXX - ${req.params}`);
+    logger.info(`Iniciamos funcion obtenerGrupoBodega XXXX - ${JSON.stringify(req.params)}`);
     try {
+        await connectToDatabase('BodegaMantenedor');
         // Obtener el ID de la URL
         const { empresa,NumeroLocal } = req.params;
 
@@ -209,12 +209,11 @@ async function obtenerGrupoBodega(req, res) {
         const consulta = ` SELECT distinct GrupoBodega,NombreGrupoBodega
                             FROM grupobodega
                             WHERE empresa = '${empresa}'
-                                AND Numerolocal = '${NumeroLocal}'`;
+                            AND Numerolocal = '${NumeroLocal}'`;
                                 
         logger.info(`Query que ejecuta:   - ${consulta}`);
         
         const result = await sql.query(consulta);
-        // logger.info(`Resultado de la consulta:   - ${JSON.stringify(result)}`);
 
         // Verificar si se encontraron resultados
         if (result.recordset.length > 0) {

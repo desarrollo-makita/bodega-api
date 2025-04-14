@@ -515,6 +515,25 @@ async function obtenerItemsreconteos(req, res) {
   }
 }
 
+
+async function siguienteReconteo(req, res) {
+  try {
+      console.log("Parámetros de entrada siguienteReconteo :", req.body);
+
+      const data = req.body;
+
+      logger.info(`Iniciamos la función siguienteReconteo - Controllers ${JSON.stringify(data)}`);
+
+      const result = await asignarReconteosService.siguienteReconteo(data);
+
+      res.status(result.status).json(result);
+  } catch (error) {
+      console.error("Error en obtenerItemsreconteos:", error);
+      res.status(500).json({ error: 'Error en el servidor al iniciarReconteos ' });
+  } finally {
+      await closeDatabaseConnection();
+  }
+}
 module.exports = {
     consultarInventario,
     asignarCapturador,
@@ -532,5 +551,6 @@ module.exports = {
     actualizarConteoSinCierre,
     validarCierreInventario,
     obtenerItemsreconteos,
-    iniciarReconteos
+    iniciarReconteos,
+    siguienteReconteo
   };
