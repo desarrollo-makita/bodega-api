@@ -4,6 +4,7 @@ const { connectToDatabase, closeDatabaseConnection } = require('../../config/dat
 const logger = require('../../config/logger.js');
 const { js2xml } = require('xml-js');
 
+
 async function iniciarReconteo(data) {
     const { local, bodega, fechaInventario, tipoItem } = data;
 
@@ -52,8 +53,8 @@ async function iniciarReconteo(data) {
 }
 
 async function siguienteReconteo(data) {
-    const { local, bodega, fechaInventario, tipoItem } = data;
-
+    const { local, bodega, fechaInventario, tipoItem ,almacenamiento} = data;
+    console.log("data _  siguienteReconteo", data)
     const [anio, mesStr] = fechaInventario.split('-');
     const mes = parseInt(mesStr);
     const periodo = parseInt(anio);
@@ -67,7 +68,8 @@ async function siguienteReconteo(data) {
         fechaInventario,
         tipoItem,
         mes,
-        periodo
+        periodo,
+        almacenamiento
     };
 
     console.log("Iniciamos la función siguienteReconteo services", data2);
@@ -84,6 +86,7 @@ async function siguienteReconteo(data) {
             .input('Local', sql.VarChar, data2.local)
             .input('Grupo', sql.Int, data2.bodega)
             .input('TipoItem', sql.VarChar, data2.tipoItem)
+            .input('SumaSiNo', sql.VarChar, data2.almacenamiento)
             .output('NumeroID', sql.Int)
             .output('MensajeID', sql.Varchar)
             .execute('sp_GenerarSiguienteReconteo');
@@ -345,48 +348,62 @@ async function validarCantidadReconteos(data) {
         logger.info(`Iniciamos la función validarCantidadReconteos services ${tipoItem}-${local}-${fechaInventario}`);
 
         const request = new sql.Request();
+        let tipoProducto; // Inicializamos tipoProducto
+        
+        if (tipoItem === '01-HERRAMIENTAS') {
+            tipoProducto = 'HERRAMIENTAS';
+            console.log('Entro en el if de HERRAMIENTAS');
+        } else if (tipoItem === '03-ACCESORIOS') {
+            tipoProducto = 'ACCESORIOS';
+            console.log('Entro en el if de ACCESORIOS');
+        } else if (tipoItem === '04-REPUESTOS') {
+            tipoProducto = 'REPUESTOS';
+            console.log('Entro en el if de REPUESTOS');
+        } else {
+            console.log('El tipoItem no coincide con ninguno de los casos previstos:', tipoItem);
+        }
 
         // Parámetros para el query
         request.input('empresa', sql.VarChar(50), empresa);
         request.input('accion', sql.VarChar(80), accion);
-        request.input('tipoItem', sql.VarChar(80), tipoItem);
+        request.input('tipoProducto', sql.VarChar(80), tipoProducto);
         request.input('local', sql.VarChar(80), local);
         request.input('fechaInventario', sql.Date, new Date(fechaInventario));
 
 
+
         // Mostrar la consulta SQL con valores interpolados
         const query = `
-           SELECT *
-            FROM BodegaMantenedor.dbo.BitacoraInventario
+          SELECT *
+            FROM BodegaMantenedor.dbo.Reconteos
             WHERE FechaInventario = '${fechaInventario}'
-            AND FechaTermino = (
-            SELECT MAX(FechaTermino)
-            FROM BitacoraInventario
+            AND NumeroReconteo = (
+            SELECT MAX(NumeroReconteo)
+            FROM Reconteos
             WHERE FechaInventario = '${fechaInventario}'
-            AND tipoItem = '${tipoItem}'
-            AND Local = '${local}'
-            AND empresa = '${empresa}'
-            AND ACCION LIKE '%${accion}%'  
-  );
+			AND NumeroLocal = '${local}'
+			AND Empresa ='${empresa}'
+			AND Clasif1 = '${tipoProducto}'
+        );
         `;
 
         logger.info(`Ejecutando consulta SQL: ${query}`);
 
         // Ejecutar la consulta
         const result = await request.query(`
-           SELECT *
-            FROM BodegaMantenedor.dbo.BitacoraInventario
-            WHERE FechaInventario = @fechaInventario
-            AND FechaTermino = (
-                SELECT MAX(FechaTermino)
-                FROM BitacoraInventario
-                WHERE FechaInventario = @fechaInventario
-                    AND tipoItem = @tipoItem
-                    AND Local = @local
-                    AND empresa = @empresa
-                    AND ACCION LIKE '%' + @accion + '%'
-  );
-        `);
+            SELECT *
+             FROM Reconteos
+             WHERE FechaInventario = @fechaInventario
+             AND NumeroReconteo = (
+                 SELECT MAX(NumeroReconteo)
+                 FROM Reconteos
+                 WHERE FechaInventario = @fechaInventario
+                     AND Clasif1 = @tipoProducto
+                     AND NumeroLocal = @local
+                     AND Empresa = @empresa
+                
+             );
+         `); 
 
         logger.info(`Consulta ejecutada correctamente, registros encontrados: ${JSON.stringify(result)}`);
 
@@ -403,6 +420,140 @@ async function validarCantidadReconteos(data) {
     }
 }
 
+async function obtenerAlmacenamiento(data){
+    
+    let tipoProducto = '';
+    console.log('Datos recibidos:', data);  // Log para ver los datos de entrada
+
+    const { tipoItem, local , fechaInventario } = data;  // Desestructuramos los valores del objeto 'data'
+
+
+    let query;
+
+    try {
+        logger.info(`Iniciamos la función obtenerAlmacenamiento services`);
+        await connectToDatabase('BodegaMantenedor');
+        const request = new sql.Request();
+
+        // Log para ver la consulta antes de ejecutarse
+        console.log(`Ejecutamos la consulta con los parámetros obtenerAlmacenamiento : tipoItem=${tipoProducto}, local=${local}, fechaInventario=${fechaInventario}`);
+
+        query = `SELECT * FROM BodegaMantenedor.dbo.registroInventarioAlmacen 
+            WHERE empresa = 'MAKITA'
+            AND tipoItem = @tipoItem
+            AND local = @local
+            And cast(fechaInventario as date) = @fechaInventario`;
+            
+
+        // Prevenimos SQL Injection usando parámetros en la consult
+        request.input('tipoItem', sql.VarChar, tipoItem);
+        request.input('local', sql.VarChar, local);
+        request.input('fechaInventario', sql.Date, fechaInventario); // Asegúrate de que el tipo de dato sea correcto
+     
+        logger.info(`Ejecutamos la query de obtenerAlmacenamiento: ${query}`);
+
+        const almacenamientoResponse = await request.query(query);
+
+        console.log("=== Respuesta de la base de datos ===");
+       // console.log("almacenamientoResponse",almacenamientoResponse);  
+        
+        if(almacenamientoResponse.recordset.length === 0) {
+            return { status: 200, data: almacenamientoResponse  , info : { mensaje: `No hay datos en almacenmaientos para los filtros consultados`, estado: 0 } };
+        }else{
+            const totalItems = almacenamientoResponse.recordset.length;
+            const totalCantidadAlmacen = almacenamientoResponse.recordset.reduce((total, item) => {
+                return total + item.CantidadAlmacen;
+              }, 0);
+
+            return { status: 200, totalItems : totalItems , cantidadUnitaria : totalCantidadAlmacen  };
+        }
+  
+    } catch (error) {
+        console.log("Error:", error);  // Log del error
+        return { status: 500, error: 'Error en el servidor al consultar almacenamiento' };
+    } finally {
+        await closeDatabaseConnection();
+    }
+
+}
+
+async function obtenerAsignacionReconteos(data) {
+    const { local, bodega, fechaInventario, tipoItem } = data;
+    let tipoProducto;
+
+    if (tipoItem === '01-HERRAMIENTAS') {
+        tipoProducto = 'HERRAMIENTAS';
+        console.log('Entro en el if de HERRAMIENTAS');
+    } else if (tipoItem === '03-ACCESORIOS') {
+        tipoProducto = 'ACCESORIOS';
+        console.log('Entro en el if de ACCESORIOS');
+    } else if (tipoItem === '04-REPUESTOS') {
+        tipoProducto = 'REPUESTOS';
+        console.log('Entro en el if de REPUESTOS');
+    } else {
+        console.log('El tipoItem no coincide con ninguno de los casos previstos:', tipoItem);
+    }
+
+    const [anio, mesStr] = fechaInventario.split('-');
+    const mes = parseInt(mesStr);
+    const periodo = parseInt(anio);
+
+    const empresa = 'Makita';
+
+    const data2 = {empresa, local, bodega,fechaInventario,tipoProducto, mes, periodo
+    };
+
+    try {
+        logger.info(`Iniciamos la función obtenerItemsReconteos services`, data2);
+
+        await connectToDatabase('BodegaMantenedor');
+        const request = new sql.Request();
+
+        // Definimos los parámetros
+        const empresaParam = empresa;
+        const localParam = local;
+        const bodegaParam = bodega;
+        const fechaInventarioParam = fechaInventario;
+        const tipoItemParam = tipoProducto;
+
+        // Log de los parámetros reales antes de ejecutar la consulta
+        console.log('Parámetros seteados:', {
+            empresa: empresaParam,
+            local: localParam,
+            bodega: bodegaParam,
+            fechaInventario: fechaInventarioParam,
+            tipoItem: tipoItemParam
+        });
+
+        // Consulta SQL con valores dinámicos (usando los parámetros reales)
+        const query = `
+            SELECT * FROM BodegaMantenedor.dbo.Reconteos 
+            WHERE Empresa = '${empresaParam}'
+              AND NumeroLocal = '${localParam}'
+              AND GrupoBodega = ${bodegaParam}
+              AND FechaInventario = '${fechaInventarioParam}'
+              AND Clasif1 = '${tipoItemParam}'
+              AND Estado = 'EnProceso'
+            ORDER BY Ubicacion DESC
+        `;
+
+        // Log de la consulta SQL con los valores reales
+       console.log('Consulta SQL con valores reales:', query);
+
+        // Ejecutamos la consulta y obtenemos el resultado
+        const responseReconteos = await request.query(query);
+
+        return { status: 200, data: responseReconteos.recordset };
+    } catch (error) {
+        console.log(`Error al obtener reconteos: ${error.message}`);
+        console.log("Error:", error);
+
+        return { status: 500, error: `Error en el servidor al obtener reconteos: ${error.message}` };
+    } finally {
+        await closeDatabaseConnection();
+    }
+}
+
 
 
 module.exports = {
@@ -410,7 +561,7 @@ module.exports = {
     asignarReconteos,
     iniciarReconteo,
     validarCantidadReconteos,   
-    siguienteReconteo
-
-    
+    siguienteReconteo,  
+    obtenerAlmacenamiento,
+    obtenerAsignacionReconteos
 };

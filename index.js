@@ -11,7 +11,7 @@ const SECRET_KEY = process.env.SECRET_KEY || 'makita-ti-chile';
 // Middleware para habilitar CORS
 app.use(cors({
   origin: '*', // Permite cualquier origen
-  methods: 'GET,POST,OPTIONS',
+  methods: 'GET,POST,OPTIONS, DELETE, PUT, PATCH',
   allowedHeaders: 'Content-Type,Authorization',
 }));
 

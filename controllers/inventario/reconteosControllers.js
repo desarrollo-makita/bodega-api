@@ -50,6 +50,7 @@ async function validarCantidadReconteos(req, res) {
 
 async function insertarReconteo(req, res) {
     logger.info(`Iniciamos funcion insertarReconteo`);
+    console.log("Parámetros de entrada:", req.body);
     try {
         await connectToDatabase('BodegaMantenedor');
 
@@ -238,10 +239,36 @@ async function obtenerGrupoBodega(req, res) {
     }
 }
 
+/**
+ * Retorna datos de almacenamiento para la consulta de inventario
+ * @param {*} req
+ * @param {*} res
+ */
+async function obtenerAlmacenamiento(req, res) {
+    try {
+        console.log("parametros de entrada obtenerAlmacenamiento : " , req.query);
+
+        const data  = req.query;
+        
+        logger.info(`Iniciamos la función obtenerAlmacenamiento (TODO)- Controllers ${JSON.stringify(data)}`);
+      
+        const almacenmamientoList = await asignarReconteosService.obtenerAlmacenamiento(data);
+  
+        res.status(200).json(almacenmamientoList);
+      
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error en el servidor' });
+    } finally {
+      await closeDatabaseConnection();
+    }
+  }
+
 
 module.exports = {
   asignarReconteos,
   validarCantidadReconteos,
   insertarReconteo,
   obtenerReconteo,  
-  obtenerGrupoBodega};
+  obtenerGrupoBodega ,
+  obtenerAlmacenamiento};

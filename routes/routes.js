@@ -50,7 +50,8 @@ const {
   validarCantidadReconteos,
   insertarReconteo,
   obtenerReconteo,  
-  obtenerGrupoBodega} = require('../controllers/inventario/reconteosControllers');
+  obtenerGrupoBodega,
+  obtenerAlmacenamiento} = require('../controllers/inventario/reconteosControllers');
 
 
 
@@ -147,6 +148,8 @@ router.get('/insertar-inventario/:empresa/:agno/:mes/:tipoinventario/:numeroloca
 router.get('/insertar-inventario-grupo/:empresa/:NumeroLocal', obtenerGrupoBodega);
 
 router.post('/siguiente-reconteo' , siguienteReconteo );
+
+router.get('/obtener-almacenamiento', obtenerAlmacenamiento );
 
 
 module.exports = router;

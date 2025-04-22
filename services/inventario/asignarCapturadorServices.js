@@ -3,49 +3,55 @@ const sql = require('mssql');
 const { connectToDatabase, closeDatabaseConnection } = require('../../config/database.js');
 const logger = require('../../config/logger.js');
 
-
 async function asignarCapturador(data) {
-    const { usuario, capturador, periodo, mes  , producto} = data; // Desestructuramos los valores del objeto 'data'
+    const { usuario, capturador, periodo, mes, producto } = data;
 
     try {
         logger.info(`Iniciamos la función asignarCapturador services`);
 
-        // Conectamos a la base de datos
         await connectToDatabase('BodegaMantenedor');
-        const request = new sql.Request();
+        const request1 = new sql.Request();
+        const request2 = new sql.Request();
 
-        // Definimos la query con parámetros para prevenir SQL Injection
-        const query = `
+        // Query para la tabla principal
+        const query1 = `
             INSERT INTO BodegaMantenedor.dbo.asignaCapturador 
             (Empresa, Usuario, Capturador, Periodo, Mes, Fecha , TipoProducto) 
-            VALUES (@empresa, @usuario, @capturador, @periodo, @mes, GETDATE() , @producto)
+            VALUES (@empresa, @usuario, @capturador, @periodo, @mes, GETDATE(), @producto)
         `;
 
-        // Asignamos los valores a los parámetros
-        request.input('empresa', sql.VarChar, 'Makita');
-        request.input('usuario', sql.VarChar, usuario);
-        request.input('capturador', sql.VarChar, capturador);
-        request.input('periodo', sql.VarChar, periodo);
-        request.input('mes', sql.VarChar, mes);
-        request.input('producto', sql.VarChar, producto);
+        // Query para la bitácora
+        const query2 = `
+            INSERT INTO BodegaMantenedor.dbo.BitacoraAsignacionCapturador 
+            (Empresa, Usuario, Capturador, Periodo, Mes, Fecha , TipoProducto) 
+            VALUES (@empresa, @usuario, @capturador, @periodo, @mes, GETDATE(), @producto)
+        `;
 
-        logger.info(`Ejecutamos la query de asignación: ${query}`);
+        // Asignamos parámetros para ambas
+        [request1, request2].forEach(request => {
+            request.input('empresa', sql.VarChar, 'Makita');
+            request.input('usuario', sql.VarChar, usuario);
+            request.input('capturador', sql.VarChar, capturador);
+            request.input('periodo', sql.VarChar, periodo);
+            request.input('mes', sql.VarChar, mes);
+            request.input('producto', sql.VarChar, producto);
+        });
 
-        // Ejecutamos la consulta
-        await request.query(query);
+        logger.info(`Ejecutando inserts en ambas tablas...`);
 
-        return { status: 200, message: 'Capturador asignado correctamente' };
+        // Ejecutamos ambas inserciones
+        await request1.query(query1);
+        await request2.query(query2);
+
+        return { status: 200, message: 'Capturador asignado correctamente y registrado en bitácora' };
     } catch (error) {
         logger.error(`Error al asignar capturador: ${error.message}`);
         console.log("Error:", error);
 
-        // Verificamos si el error es una violación de clave única
         if (error.message.includes('Violation of UNIQUE KEY constraint')) {
-            // En caso de duplicado, devolvemos HTTP 409
             return { status: 409, error: 'El capturador ya está asignado.' };
         }
 
-        // Para otros errores, devolvemos HTTP 500
         return { status: 500, error: `Error en el servidor al asignar capturador: ${error.message}` };
     } finally {
         await closeDatabaseConnection();
