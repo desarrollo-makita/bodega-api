@@ -375,7 +375,7 @@ async function validarCantidadReconteos(data) {
         // Mostrar la consulta SQL con valores interpolados
         const query = `
           SELECT *
-            FROM BodegaMantenedor.dbo.Reconteos
+            FROM Reconteos
             WHERE FechaInventario = '${fechaInventario}'
             AND NumeroReconteo = (
             SELECT MAX(NumeroReconteo)
@@ -386,8 +386,7 @@ async function validarCantidadReconteos(data) {
 			AND Clasif1 = '${tipoProducto}'
         );
         `;
-
-        logger.info(`Ejecutando consulta SQL: ${query}`);
+        logger.info(`ejecutamos query para validarCantidadReconteos ${query}`);
 
         // Ejecutar la consulta
         const result = await request.query(`
@@ -405,7 +404,7 @@ async function validarCantidadReconteos(data) {
              );
          `); 
 
-        logger.info(`Consulta ejecutada correctamente, registros encontrados: ${JSON.stringify(result)}`);
+         logger.info(` SELECT ejecutado correctamente: ${JSON.stringify(result.recordset)}`);
 
         if (result.recordset.length === 0) {
             return { status: 200, data: { mensaje: 'sin registro de cierre', estado: 0 } };

@@ -380,7 +380,7 @@ async function validarCierreInventario(data) {
             AND FechaInventario = @fechaInventario
         `);
 
-        logger.info(`Consulta ejecutada correctamente, registros encontrados: ${JSON.stringify(result)}`);
+        logger.info(`Consulta ejecutada correctamente validarCierreInventario, registros encontrados: ${JSON.stringify(result)}`);
 
         if (result.recordset.length === 0) {
             return { status: 200, data: { mensaje: 'sin registro de cierre', estado: 0 } };

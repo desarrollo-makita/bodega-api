@@ -48,7 +48,7 @@ async function validarCantidadReconteos(req, res) {
   }
 }
 
-async function insertarReconteo(req, res) {
+async function insertarReconteo2(req, res) {
     logger.info(`Iniciamos funcion insertarReconteo`);
     console.log("Parámetros de entrada:", req.body);
     try {
@@ -138,6 +138,82 @@ async function insertarReconteo(req, res) {
       res.status(500).json({ error: "Error interno del servidor" });
     }
     finally {
+        await closeDatabaseConnection();
+    }
+}
+
+async function insertarReconteo(req, res) {
+    logger.info(`Iniciamos función insertarReconteos`);
+    console.log("Parámetros de entrada:", req.body);
+
+    const fallidos = []; // Lista para almacenar los objetos que fallaron
+
+    try {
+        await connectToDatabase('BodegaMantenedor');
+
+        const reconteos = req.body; // Asumimos que req.body es un arreglo de objetos
+
+        if (!Array.isArray(reconteos) || reconteos.length === 0) {
+            logger.error(`Error: No se proporcionaron datos válidos en el cuerpo de la solicitud.`);
+            return res.status(400).json({ error: "El cuerpo de la solicitud debe ser un arreglo de objetos." });
+        }
+
+        for (const reconteo of reconteos) {
+            try {
+                const {
+                    Empresa, Agno, Mes, FechaInventario, TipoInventario,
+                    NumeroReconteo, NumeroLocal, GrupoBodega, Clasif1,
+                    Ubicacion, Item, Cantidad, Estado, Usuario, NombreDispositivo
+                } = reconteo;
+
+                // Verificar si algún campo está vacío, es null o undefined
+                if (!Empresa || !Agno || !Mes || !FechaInventario || !TipoInventario ||
+                    !NumeroReconteo || !NumeroLocal || !GrupoBodega || !Clasif1 ||
+                    !Item || !Cantidad || !Estado || !Usuario || !NombreDispositivo) {
+                    logger.warn(`Faltan parámetros en el objeto: ${JSON.stringify(reconteo)}`);
+                    fallidos.push({ reconteo, error: "Faltan parámetros requeridos." });
+                    continue; // Pasar al siguiente objeto
+                }
+
+                const fecha2 = new Date().toLocaleString('sv-SE', { timeZone: 'America/Santiago' }) + '.' + new Date().getMilliseconds().toString().padStart(3, '0');
+
+                const consulta = `
+                INSERT INTO RespuestaReconteos (Empresa, Agno, Mes, FechaInventario,
+                TipoInventario, NumeroReconteo, NumeroLocal, GrupoBodega, tipoitem,
+                Ubicacion, Item, Cantidad, Estado, Usuario, NombreDispositivo, Proceso, FechaProceso) 
+                VALUES ('${Empresa}', '${Agno}', '${Mes}', '${FechaInventario}',
+                '${TipoInventario}', '${NumeroReconteo}', SUBSTRING('${NumeroLocal}', 1, 2),
+                '${GrupoBodega}', '${Clasif1}', '${Ubicacion}', '${Item}', ${Cantidad},
+                '${Estado}', '${Usuario}', '${NombreDispositivo}', 'EnProceso', '${fecha2}');
+                `;
+
+                logger.info(`INSERT a ejecutar: ${consulta}`);
+
+                const result = await sql.query(consulta);
+
+                if (!result.rowsAffected || result.rowsAffected[0] === 0) {
+                    logger.warn(`No se insertaron datos para el item: ${Item}`);
+                    fallidos.push({ reconteo, error: "No se insertaron datos para el item proporcionado." });
+                }
+            } catch (error) {
+                logger.error(`Error al insertar reconteo: ${error.message}`);
+                fallidos.push({ reconteo, error: error.message });
+            }
+        }
+
+        // Responder con los resultados
+        if (fallidos.length > 0) {
+            res.status(207).json({
+                mensaje: "Algunos reconteos no se pudieron insertar.",
+                fallidos
+            });
+        } else {
+            res.status(200).json({ mensaje: "Todos los reconteos se insertaron correctamente." });
+        }
+    } catch (error) {
+        logger.error(`Error general en insertarReconteos: ${error.message}`);
+        res.status(500).json({ error: "Error interno del servidor." });
+    } finally {
         await closeDatabaseConnection();
     }
 }
