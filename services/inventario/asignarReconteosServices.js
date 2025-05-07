@@ -43,7 +43,7 @@ async function iniciarReconteo(data) {
 
         logger.info(`Finalizó la ejecución de iniciarReconteos ${JSON.stringify(result)}`);
 
-        return { status: 200, message: "Actualización realizada con éxito." };
+        return { status: 200, message: "iniciarReconteos realizada con éxito." };
     } catch (error) {
         console.log("Error:", error);
         return { status: 500, error: 'Error en el servidor al iniciarReconteos' };
@@ -149,7 +149,7 @@ async function obtenerReconteos(data) {
         const tipoItemParam = tipoProducto;
 
         // Log de los parámetros reales antes de ejecutar la consulta
-        console.log('Parámetros seteados:', {
+        console.log('Parámetros seteadosasasasas:', {
             empresa: empresaParam,
             local: localParam,
             bodega: bodegaParam,
@@ -264,7 +264,7 @@ async function asignarReconteos2(data) {
 
 async function asignarReconteos(data) {
     try {
-        console.log('Iniciamos la función asignarReconteos services' , data);
+        console.log('Iniciamos la función asignarReconteos services', data);
 
         // Agrupar los datos por nombre
         const listaReconteos = data;
@@ -272,31 +272,21 @@ async function asignarReconteos(data) {
         console.log('Conexión a la base de datos establecida.');
         await connectToDatabase('BodegaMantenedor'); // Establecer conexión con la base de datos
 
+        const fallidos = []; // Lista para almacenar los ítems que no se pudieron actualizar
+
         // Procesar cada grupo de datos por nombre
         for (let reconteo of listaReconteos) {
             console.log(`Procesando reconteo de ${reconteo.nombre}`);
-            const { nombre , cantidad} = reconteo;
+            const { nombre, cantidad } = reconteo;
             const cantidadFinal = cantidad === undefined ? 1 : cantidad;
+
             // Iterar sobre los elementos en el arreglo 'data' dentro de cada grupo
             for (let itemData of reconteo.data) {
                 const item = itemData.Item; // Obtener el Item de cada objeto
                 console.log(`Procesando el Item: ${item}`);
-                
-                // Aquí realizamos directamente el UPDATE
+
                 try {
                     const request = new sql.Request(); // Crear la solicitud SQL
-                    
-                    // Obtener los valores que necesitas para el UPDATE
-                    const { Item } = itemData;
-
-                    console.log(`
-                        UPDATE reconteos
-                        SET usuario = '${nombre}'
-                        FROM reconteos r
-                        INNER JOIN BodegaMantenedor.dbo.asignaCapturador A ON A.Usuario = '${nombre}'
-                        WHERE r.Item = '${Item}'
-                        and numeroReconteo = '${cantidadFinal}'
-                    `);
 
                     // Crear la consulta SQL de actualización
                     const query = `
@@ -310,30 +300,38 @@ async function asignarReconteos(data) {
                     `;
 
                     // Asignamos los parámetros para evitar inyecciones SQL
-                    request.input('Item', sql.NVarChar, Item); // El parámetro para identificar el 'Item'
+                    request.input('Item', sql.NVarChar, item); // El parámetro para identificar el 'Item'
                     request.input('nombre', sql.NVarChar, nombre);
-                    request.input('cantidadFinal', sql.Int, cantidadFinal);  
+                    request.input('cantidadFinal', sql.Int, cantidadFinal);
+
                     // Ejecutar la consulta SQL
                     const result = await request.query(query);
 
                     // Verificar si se actualizó algún registro
-                    if (result.rowsAffected > 0) {
-                        console.log(`Reconteo para el item ${item} procesado correctamente.`);
-                    } else {
+                    console.log(`result ${JSON.stringify(result)}.`);
+                    if (result.rowsAffected[0] === 0) {
                         console.log(`No se pudo procesar el reconteo para el item ${item}.`);
+                        fallidos.push({ item, usuario: nombre });
+                    } else {
+                        console.log(`Reconteo para el item ${item} procesado correctamente.`);
                     }
                 } catch (error) {
                     console.error(`Error al procesar el item ${item}:`, error);
+                    fallidos.push({ item, usuario: nombre, error: error.message });
                 }
             }
         }
 
-        return { status: 200, message: 'Reconteos procesados correctamente.' };
+        return {
+            status: 200,
+            message: 'Reconteos procesados correctamente.',
+            fallidos // Devolver la lista de ítems que no se pudieron actualizar
+        };
 
     } catch (error) {
         console.error("Error:", error);
         return { status: 500, error: 'Error al procesar los reconteos.' };
-    }finally{
+    } finally {
         await closeDatabaseConnection(); // Cerrar la conexión a la base de datos
     }
 }
@@ -384,6 +382,7 @@ async function validarCantidadReconteos(data) {
 			AND NumeroLocal = '${local}'
 			AND Empresa ='${empresa}'
 			AND Clasif1 = '${tipoProducto}'
+            and numeroReconteo <> 99
         );
         `;
         logger.info(`ejecutamos query para validarCantidadReconteos ${query}`);
@@ -400,16 +399,19 @@ async function validarCantidadReconteos(data) {
                      AND Clasif1 = @tipoProducto
                      AND NumeroLocal = @local
                      AND Empresa = @empresa
+                     and numeroReconteo <> 99
                 
              );
          `); 
 
          logger.info(` SELECT ejecutado correctamente: ${JSON.stringify(result.recordset)}`);
-
-        if (result.recordset.length === 0) {
+         const enProceso = result.recordset.filter(item => item.Estado === "EnProceso").length;
+        
+        
+         if (result.recordset.length === 0) {
             return { status: 200, data: { mensaje: 'sin registro de cierre', estado: 0 } };
         } else {
-            return { status: 200, data: result.recordset[0] };
+            return { status: 200, data: result.recordset[0] , enProceso : enProceso};
         }
     } catch (error) {
         console.error("Error:", error);
@@ -553,6 +555,67 @@ async function obtenerAsignacionReconteos(data) {
     }
 }
 
+async function obtenerResumenReconteos(data){
+    
+    let tipoProducto = '';
+    console.log('Datos recibidos obtenerResumenReconteos :', data);  // Log para ver los datos de entrada
+
+    const { tipoItem, numeroReconteo , fechaInventario } = data;  // Desestructuramos los valores del objeto 'data'
+
+    
+    if (tipoItem === '01-HERRAMIENTAS') {
+        tipoProducto = 'HERRAMIENTAS';
+        console.log('Entro en el if de HERRAMIENTAS');
+    } else if (tipoItem === '03-ACCESORIOS') {
+        tipoProducto = 'ACCESORIOS';
+        console.log('Entro en el if de ACCESORIOS');
+    } else if (tipoItem === '04-REPUESTOS') {
+        tipoProducto = 'REPUESTOS';
+        console.log('Entro en el if de REPUESTOS');
+    } else {
+        console.log('El tipoItem no coincide con ninguno de los casos previstos:', tipoItem);
+    }
+    
+    let query;
+
+    try {
+        logger.info(`Iniciamos la función obtenerResumenReconteos services`);
+        await connectToDatabase('BodegaMantenedor');
+        const request = new sql.Request();
+
+        // Log para ver la consulta antes de ejecutarse
+        console.log(`Ejecutamos la consulta obtenerResumenReconteos  con los parámetros  : tipoItem=${tipoProducto}, numeroReconteo=${numeroReconteo}, fechaInventario=${fechaInventario}`);
+
+        query = `SELECT * FROM BodegaMantenedor.dbo.ResumenReconteos 
+            WHERE empresa = 'MAKITA'
+            AND tipoItem  = @tipoItem
+            AND numeroReconteo = @numeroReconteo
+            And cast(fechaInventario as date) = @fechaInventario`;
+            
+
+        // Prevenimos SQL Injection usando parámetros en la consult
+        request.input('tipoItem', sql.VarChar, tipoProducto);
+        request.input('numeroReconteo', sql.VarChar, numeroReconteo);
+        request.input('fechaInventario', sql.Date, fechaInventario); // Asegúrate de que el tipo de dato sea correcto
+     
+        logger.info(`Ejecutamos la query de obtenerResumenReconteos: ${query}`);
+
+        const resumenReconteoResponse = await request.query(query);
+
+        console.log("=== Respuesta de la base de datos ===");
+       // console.log("resumenReconteoResponse",resumenReconteoResponse);
+       
+       return { status: 200, data: resumenReconteoResponse.recordset[0] };
+    
+    } catch (error) {
+        console.log("Error:", error);  // Log del error
+        return { status: 500, error: 'Error en el servidor al consultar almacenamiento' };
+    } finally {
+        await closeDatabaseConnection();
+    }
+
+}
+
 
 
 module.exports = {
@@ -562,5 +625,6 @@ module.exports = {
     validarCantidadReconteos,   
     siguienteReconteo,  
     obtenerAlmacenamiento,
-    obtenerAsignacionReconteos
+    obtenerAsignacionReconteos,
+    obtenerResumenReconteos
 };

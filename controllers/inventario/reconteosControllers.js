@@ -341,10 +341,38 @@ async function obtenerAlmacenamiento(req, res) {
   }
 
 
+  /**
+ * Retorna datos de obtenerResumenReconteos para la consulta de inventario
+ * @param {*} req
+ * @param {*} res
+ */
+async function obtenerResumenReconteos(req, res) {
+    try {
+        console.log("parametros de entrada obtenerResumenReconteos : " , req.query);
+
+        const data  = req.query;
+        
+        logger.info(`Iniciamos la función obtenerResumenReconteos - Controllers ${JSON.stringify(data)}`);
+      
+        const almacenmamientoList = await asignarReconteosService.obtenerResumenReconteos(data);
+  
+        res.status(200).json(almacenmamientoList);
+      
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error en el servidor' });
+    } finally {
+      await closeDatabaseConnection();
+    }
+  }
+
+
 module.exports = {
   asignarReconteos,
   validarCantidadReconteos,
   insertarReconteo,
   obtenerReconteo,  
   obtenerGrupoBodega ,
-  obtenerAlmacenamiento};
+  obtenerAlmacenamiento,
+  obtenerResumenReconteos
+};

@@ -178,7 +178,7 @@ async function getGrupoBodega(data) {
 
 
 async function iniciarInventario(data) {
-    const { periodo, mes, numeroLocal, grupoBodega, categorias , fechaInventario} = data;
+    const { periodo, mes, numeroLocal, grupoBodega, categorias , fechaInventario, categoria} = data;
     const empresa = 'Makita';
 
     console.log("=== Parámetros Recibidos ===");
@@ -187,7 +187,8 @@ async function iniciarInventario(data) {
     console.log("Número de Local:", numeroLocal);
     console.log("Grupo de Bodega:", grupoBodega);
     console.log("Categorías:", categorias);
-    console.log("Fecha Inventsario", fechaInventario);  
+    console.log("Fecha Inventsario", fechaInventario);
+    console.log("Categoria", categoria);    
     console.log("=============================");
 
     const mensaje = 'Inventario iniciado correctamente';
@@ -207,11 +208,12 @@ async function iniciarInventario(data) {
             request.input('Local', sql.VarChar(40), numeroLocal);
             request.input('Grupo', sql.Int, grupoBodega);
             request.input('FechaInventario', sql.Date, fechaInventario);
+            request.input('Categoria', sql.VarChar(200), categoria);
 
             logger.info(`Ejecutamos el procedimiento almacenado sp_RegistroInventario para TipoItem: ${tipoItem}`);
     
             const result = await request.execute('sp_RegistroInventario');
-            resultados.push({ tipoItem, mensaje});
+            resultados.push({ tipoItem, mensaje,result}); // Guardamos el resultado de cada ejecución
         }
 
         logger.info(`Finalizó la ejecución de sp_RegistroInventario para todas las categorías`);
