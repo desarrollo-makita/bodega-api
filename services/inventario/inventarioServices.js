@@ -54,7 +54,7 @@ async function consultarInv(data) {
        // console.log("inventarioResponse",inventarioResponse);  
         
         if(inventarioResponse.recordset.length === 0) {
-            return { status: 200, data: inventarioResponse  , info : { mensaje: `No ha iniciado el inventario para el periodo ${fechaInventario}, Por favor, inicie inventario para periodo , tipo item y local ingresado`, estado: 0 } };
+            return { status: 200, data: inventarioResponse  , info : { mensaje: `No ha iniciado el inventario para el periodo ${fechaInventario}`, estado: 0 } };
         }else{
             return { status: 200, data: inventarioResponse };
         }

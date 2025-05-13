@@ -41,7 +41,11 @@ const {
   validarCierreInventario,
   obtenerItemsreconteos,
   iniciarReconteos,
-  siguienteReconteo
+  siguienteReconteo,
+  finalizarInventario,
+  obtenerCategoria,
+  obtenerReconteo99,
+  updateReconteo99
   
 } = require('../controllers/inventario/inventarioControllers');
 
@@ -152,6 +156,12 @@ router.post('/siguiente-reconteo' , siguienteReconteo );
 
 router.get('/obtener-almacenamiento', obtenerAlmacenamiento );
 router.get('/obtener-resumen-reconteo', obtenerResumenReconteos );
+
+router.post('/finalizar-inventario', finalizarInventario);
+router.get('/insertar-inventario-categoria/:empresa', obtenerCategoria);
+router.get('/insertar-inventario-categoria/:empresa/:agno/:mes/:tipoinventario/:numerolocal/:tipoitem/:usuario/:grupobodega', obtenerReconteo99);
+router.post('/insertar-inventario-categoria/', updateReconteo99);
+
 
 
 module.exports = router;

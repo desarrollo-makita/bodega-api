@@ -87,44 +87,44 @@ async function consultarAsignacion(req, res) {
  * @param {*} req
  * @param {*} res
  */
-async function deletetAsignacion(req, res) {
-  try {
-    logger.info(`Iniciamos la función deletetAsignacion controllers`);
-    const deleteAsig= await eliminarAsignacionService.deleteAsignacion(req.query);
+  async function deletetAsignacion(req, res) {
+    try {
+      logger.info(`Iniciamos la función deletetAsignacion controllers`);
+      const deleteAsig= await eliminarAsignacionService.deleteAsignacion(req.query);
 
-    res.status(200).json(deleteAsig);
-  } catch (error) {
-    // Manejamos cualquier error ocurrido durante el proceso
-    logger.error(`Error al eliminar la asignacion: : ${error.message}`);
-    res.status(500).json({
-      error: `Error en el servidor [deleteAsignacion-controllers] :  ${error.message}`,
-    });
-  } 
-}
-
-
-async function consultarAsignacionFiltro(req, res) {
-   try {
-     
-      const { capturador , mes, periodo } = req.params;
-      
-      logger.info(`Iniciamos la función consultarAsignacionFiltro controllers con filtro ${capturador} - ${mes} - ${periodo}`);
-     
-      const data = await consultarAsignacionFiltroService.consultarAsignaiconFiltro(capturador, mes, periodo);
-                                                    
-      if (data.status != 200) {
-        res.status(404).json(data );
-      }
-      else {
-        res.status(200).json(data);
-      }
+      res.status(200).json(deleteAsig);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Error en el servidor' });
-    } finally {
-      await closeDatabaseConnection();
-    }
-}
+      // Manejamos cualquier error ocurrido durante el proceso
+      logger.error(`Error al eliminar la asignacion: : ${error.message}`);
+      res.status(500).json({
+        error: `Error en el servidor [deleteAsignacion-controllers] :  ${error.message}`,
+      });
+    } 
+  }
+
+
+  async function consultarAsignacionFiltro(req, res) {
+    try {
+      
+        const { capturador , mes, periodo } = req.params;
+        
+        logger.info(`Iniciamos la función consultarAsignacionFiltro controllers con filtro ${capturador} - ${mes} - ${periodo}`);
+      
+        const data = await consultarAsignacionFiltroService.consultarAsignaiconFiltro(capturador, mes, periodo);
+                                                      
+        if (data.status != 200) {
+          res.status(404).json(data );
+        }
+        else {
+          res.status(200).json(data);
+        }
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error en el servidor' });
+      } finally {
+        await closeDatabaseConnection();
+      }
+  }
 
   async function validarInicioInventario(req, res) {
     try {
@@ -192,6 +192,7 @@ async function consultarAsignacionFiltro(req, res) {
         // Conexión a la base de datos
         await connectToDatabase('BodegaMantenedor');
 
+        console.log("**********************" ,req.params)
         // Obtener parámetros de la URL
         const { tipoinventario, tipoitem, usuario, fechainventario, bodega } = req.params;
 
@@ -222,7 +223,7 @@ async function consultarAsignacionFiltro(req, res) {
         `;
 
         // Crear el objeto de la consulta
-        const request = new sql.Request();
+        
 
         // Pasar los parámetros a la consulta
         request.input('tipoinventario', sql.NVarChar, tipoinventario);
@@ -359,23 +360,23 @@ async function consultarAsignacionFiltro(req, res) {
  * @param {*} req
  * @param {*} res
  */
-async function consularGrupoBodega(req, res) {
-  try {
+  async function consularGrupoBodega(req, res) {
+    try {
+        
+        
+        logger.info(`Iniciamos la función consularGrupoBodega - Controllers`);
       
-      
-      logger.info(`Iniciamos la función consularGrupoBodega - Controllers`);
-    
-      const asignacionList = await inventarioService.getGrupoBodega();
+        const asignacionList = await inventarioService.getGrupoBodega();
 
-      res.status(200).json(asignacionList);
-    
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error en el servidor' });
-  } finally {
-    await closeDatabaseConnection();
+        res.status(200).json(asignacionList);
+      
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error en el servidor' });
+    } finally {
+      await closeDatabaseConnection();
+    }
   }
-}
 
 
   /**
@@ -496,44 +497,274 @@ async function actualizarConteoCierre(req, res) {
  * @param {*} req
  * @param {*} res
  */
-async function obtenerItemsreconteos(req, res) {
+  async function obtenerItemsreconteos(req, res) {
+    try {
+        console.log("Parámetros de entrada:", req.body);
+
+        const data = req.body;
+
+        logger.info(`Iniciamos la función obtenerItemsreconteos - Controllers ${JSON.stringify(data)}`);
+
+        const result = await asignarReconteosService.obtenerReconteos(data);
+
+        res.status(result.status).json(result);
+    } catch (error) {
+        console.error("Error en obtenerItemsreconteos:", error);
+        res.status(500).json({ error: 'Error en el servidor al extraer data de consulta ' });
+    } finally {
+        await closeDatabaseConnection();
+    }
+  }
+
+
+  async function siguienteReconteo(req, res) {
+    try {
+        console.log("Parámetros de entrada siguienteReconteo :", req.body);
+
+        const data = req.body;
+
+        logger.info(`Iniciamos la función siguienteReconteo - Controllers ${JSON.stringify(data)}`);
+
+        const result = await asignarReconteosService.siguienteReconteo(data);
+
+        res.status(result.status).json(result);
+    } catch (error) {
+        console.error("Error en obtenerItemsreconteos:", error);
+        res.status(500).json({ error: 'Error en el servidor al iniciarReconteos ' });
+    } finally {
+        await closeDatabaseConnection();
+    }
+  }
+
+  async function finalizarInventario(req, res) {
+    
+    logger.info(`Iniciamos funcion finalizarInventario  - ${JSON.stringify(req.body)}`);
+    try {
+        // Obtener el ID de la URL
+        
+        console.log(req.body);
+       
+        const { agno, mes, fechaInventario, tipoItem, local, grupoBodega } =  req.body;
+        // Conectar a la base de datos
+        await connectToDatabase("BodegaMantenedor");    
+        
+        // Crear un nuevo objeto de solicitud para la consulta
+        const request = new sql.Request();
+
+        // Definir los parámetros del insert
+
+        request.input('Empresa', sql.VarChar(20), 'Makita');
+        request.input('Agno', sql.VarChar(40), agno);
+        request.input('Mes', sql.Int, parseInt(mes));
+        request.input('FechaInventario', sql.Date, fechaInventario);
+        request.input('TipoItem', sql.VarChar(20), tipoItem);
+        request.input('Local', sql.VarChar(40), local);
+        request.input('Grupo', sql.Int, grupoBodega);
+        request.input('Accion', sql.VarChar(20), 'INVTERMINADO');
+        request.input('FechaInicio', sql.DateTime, new Date());  // fecha actual
+        request.input('FechaTermino', sql.DateTime, new Date()); // fecha actual
+        request.input('Estado', sql.Int, 1);
+        request.input('Usuario', sql.VarChar(20), 'ADMIN');
+       
+        // Consulta SQL para insertar datos
+       // Consulta SQL para insertar datos
+       const query = `
+       INSERT INTO BitacoraInventario
+       (Empresa, Agno, Mes, FechaInventario, Tipoitem, Local, GrupoBodega, Accion, FechaInicio, FechaTermino, Estado, Usuario)
+       VALUES (@Empresa, @Agno, @Mes, @FechaInventario, @TipoItem, @Local, @Grupo, 'INVTERMINADO', GETDATE(), GETDATE(), 1, 'ADMIN')
+   `;
+        
+        // Ejecutar la consulta
+        await request.query(query);
+
+        // Responder con el resultado en formato JSON
+        res.json({ message: 'finalizarInventario guardado exitosamente.' });
+        
+        logger.info(`Fin de la funcion finalizarInventario`);
+        
+    } catch (error) {
+        // Manejar errores
+        logger.error(`Error al cerrar inventario: ${error.message}`);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+    finally{
+        await closeDatabaseConnection();
+    }
+}
+
+async function obtenerCategoria(req, res) {
+    
+  logger.info(`Iniciamos funcion obtenerCategoria XXXX - ${req.params}`);
   try {
-      console.log("Parámetros de entrada:", req.body);
 
-      const data = req.body;
+    await connectToDatabase("BodegaMantenedor");
+      // Obtener el ID de la URL
+      const { empresa } = req.params;
 
-      logger.info(`Iniciamos la función obtenerItemsreconteos - Controllers ${JSON.stringify(data)}`);
+      if ( !empresa ) {
+          logger.error(`Error faltan parametros de entrada a la solicitud`);
+          return res.status(400).json({ error: `Todos los campos son requeridos.` });
+      }
 
-      const result = await asignarReconteosService.obtenerReconteos(data);
 
-      res.status(result.status).json(result);
+      const consulta = ` SELECT distinct REPLACE(codigo,'/',' ') Codigo ,REPLACE(codigo,'/',' ') as Descripcion 
+                           FROM  bdqmakita.dbo.codigo
+                          WHERE empresa = '${empresa}'
+                            AND tipocodigo = 'SUBFAMILIA'
+                            and Descripcion like '%Acc%'
+                            order by codigo
+                            `;
+                            
+      logger.info(`Query que ejecuta:   - ${consulta}`);
+      
+      const result = await sql.query(consulta);
+     // logger.info(`Resultado de la consulta:   - ${JSON.stringify(result)}`);
+
+      // Verificar si se encontraron resultados
+      if (result.recordset.length > 0) {
+          // Responder con el resultado en formato JSON
+          res.json(result.recordset);
+         // res.status(800).json({ error: "OK ULTIMA" });
+      } 
+      else
+      {
+          // Si no se encontraron resultados, responder con un mensaje
+          res.status(404).json({ error: "NOOK ULTIMA" });
+      }
+     // logger.info(`Fin de la funcion obtenerGrupoBodega`);
+
+      
   } catch (error) {
-      console.error("Error en obtenerItemsreconteos:", error);
-      res.status(500).json({ error: 'Error en el servidor al extraer data de consulta ' });
-  } finally {
-      await closeDatabaseConnection();
+      // Manejar errores
+      logger.error(`Error al obtener la grupo bodega: ${error.message}`);
+      res.status(500).json({ error: "Error interno del servidor" });
+  }finally{
+    await closeDatabaseConnection();
   }
 }
 
-
-async function siguienteReconteo(req, res) {
+async function obtenerReconteo99(req, res) {
+    
+  logger.info(`Iniciamos función obtenerReconteo - ${JSON.stringify(req.params)}`);
+  
   try {
-      console.log("Parámetros de entrada siguienteReconteo :", req.body);
 
-      const data = req.body;
+    await connectToDatabase("BodegaMantenedor");
+      // Obtener el ID de la URL
+      const { empresa,agno,mes,tipoinventario, numerolocal, tipoitem, usuario,grupobodega } = req.params;
+      // Convertir fecha a formato YYYY-MM-DD
+      // const fechaFormateada = moment(fechainventario, ['YYYY-MM-DD', 'DD-MM-YYYY', 'MM-DD-YYYY']).format('YYYY-MM-DD');
 
-      logger.info(`Iniciamos la función siguienteReconteo - Controllers ${JSON.stringify(data)}`);
+      //logger.info(`Se formatea fecha  - ${fechaFormateada}`);
 
-      const result = await asignarReconteosService.siguienteReconteo(data);
+     // logger.info(`PASA 1 - ${fechaFormateada}`);
 
-      res.status(result.status).json(result);
+      // Construir la consulta utilizando el item como filtro
+      const consulta = ` select Clasif1,Item,Ubicacion,NumeroReconteo
+                           from Reconteos
+                          where empresa = '${empresa}'
+                            AND Agno = '${agno}'
+                            AND Mes = '${mes}'
+                            AND TipoInventario = '${tipoinventario}'
+                            AND NumeroLocal =   SUBSTRING('${numerolocal}', 1, 2)
+                            AND clasif1 = '${tipoitem}'
+                            AND usuario = '${usuario}'
+                            AND GrupoBodega = '${grupobodega}'
+                            AND estado ='EnProceso'
+                            AND numeroreconteo = 99
+                            order by ubicacion, item
+                            ` ;
+
+      
+      logger.info(`Query que ejecuta:   - ${consulta}`);
+      
+      const result = await sql.query(consulta);
+      logger.info(`Resultado de la consulta:   - ${JSON.stringify(result)}`);
+
+      // Verificar si se encontraron resultados
+      if (result.recordset.length > 0) {
+          // Responder con el resultado en formato JSON
+          res.json(result.recordset);
+         // res.status(800).json({ error: "OK ULTIMA" });
+      } 
+      else
+      {
+          // Si no se encontraron resultados, responder con un mensaje
+          res.status(404).json({ error: "No se encontraron datos" });
+      }
+     // logger.info(`Fin de la funcion obtenerUltimaUbicacion`);
+
+    
   } catch (error) {
-      console.error("Error en obtenerItemsreconteos:", error);
-      res.status(500).json({ error: 'Error en el servidor al iniciarReconteos ' });
-  } finally {
-      await closeDatabaseConnection();
+      // Manejar errores
+      logger.error(`Error al obtener en los parametros: ${error.message}`);
+      res.status(500).json({ error: "Error interno del servidor" });
+  }finally{
+    await closeDatabaseConnection();
   }
 }
+
+async function updateReconteo99(req, res) {
+  logger.info(`Iniciamos funcion updateReconteo99`);
+  try {
+
+    await connectToDatabase("BodegaMantenedor");
+      
+      const { Id,Empresa,Agno,Mes,FechaInventario,TipoInventario
+          ,NumeroReconteo,NumeroLocal,GrupoBodega,Clasif1
+          ,Ubicacion,Item,Cantidad,Estado,Usuario,NombreDispositivo 
+      } = req.body;
+
+       // Verificar si algún campo está vacío, es null o undefined
+      if (!Empresa || !Agno || !Mes  || !FechaInventario || !TipoInventario 
+          || !NumeroReconteo  || !NumeroLocal 
+          || !GrupoBodega || !Clasif1  || !Item || !Cantidad || !Estado|| !Usuario || !NombreDispositivo) {
+          logger.error(`Error faltan parametros de entrada a la solicitud`);
+          return res.status(400).json({ error: `Todos los campos son requeridos INSERTA.` });
+      }
+
+     
+
+      const consulta = ` UPDATE reconteos set estado = 'Recibido'
+                                             ,cantidad = rtrim('${Cantidad}')
+      WHERE Empresa = rtrim('${Empresa}') 
+        AND Agno    =  rtrim('${Agno}')
+        AND Mes     =  rtrim('${Mes}')
+        AND FechaInventario = rtrim('${FechaInventario}')
+        AND TipoInventario = 'RECONTEO'
+        AND NumeroReconteo = 99
+        AND NumeroLocal = SUBSTRING('${NumeroLocal}', 1, 2)
+        AND GrupoBodega =  rtrim('${GrupoBodega}')
+        AND Clasif1 =  rtrim('${Clasif1}')
+  
+        AND Item =  rtrim('${Item}')
+        AND Estado =  'EnProceso'
+        AND Usuario =  rtrim('${Usuario}')
+        AND NombreDispositivo =  rtrim('${NombreDispositivo}')
+         `;
+
+   logger.info(`UPDATE a ejecutar : ${consulta}`);
+  
+  const result = await sql.query(consulta);
+
+
+  if (result.rowsAffected && result.rowsAffected[0] > 0) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      res.json({ mensaje: `Reconteo99 - update reconteos para el item ${Item}` });
+  } else {
+      res.status(200).json({ mensaje: "Reconteo99 - No se modifico el ${Item} " });
+  }
+
+   //logger.info(`Fin de la funcion RespuestaReconteos`);
+  } catch (error) {
+      // Manejar errores
+      logger.error(`Error al insertar Reconteo99: ${error.message}`);
+      res.status(500).json({ error: "Error interno del servidor" });
+  }finally{
+      await closeDatabaseConnection();
+  } 
+}
+
 module.exports = {
     consultarInventario,
     asignarCapturador,
@@ -552,5 +783,9 @@ module.exports = {
     validarCierreInventario,
     obtenerItemsreconteos,
     iniciarReconteos,
-    siguienteReconteo
+    siguienteReconteo,
+    finalizarInventario,
+    obtenerCategoria,
+    obtenerReconteo99,
+    updateReconteo99
   };

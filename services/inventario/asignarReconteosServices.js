@@ -104,7 +104,8 @@ async function siguienteReconteo(data) {
 
 
 async function obtenerReconteos(data) {
-    const { local, bodega, fechaInventario, tipoItem } = data;
+    const { local, fechaInventario, tipoItem, numeroReconteo } = data;
+    let tipoProducto;
 
     if (tipoItem === '01-HERRAMIENTAS') {
         tipoProducto = 'HERRAMIENTAS';
@@ -122,13 +123,11 @@ async function obtenerReconteos(data) {
     const [anio, mesStr] = fechaInventario.split('-');
     const mes = parseInt(mesStr);
     const periodo = parseInt(anio);
-
     const empresa = 'Makita';
 
     const data2 = {
         empresa,
         local,
-        bodega,
         fechaInventario,
         tipoProducto,
         mes,
@@ -141,50 +140,38 @@ async function obtenerReconteos(data) {
         await connectToDatabase('BodegaMantenedor');
         const request = new sql.Request();
 
-        // Definimos los parámetros
-        const empresaParam = empresa;
-        const localParam = local;
-        const bodegaParam = bodega;
-        const fechaInventarioParam = fechaInventario;
-        const tipoItemParam = tipoProducto;
-
-        // Log de los parámetros reales antes de ejecutar la consulta
-        console.log('Parámetros seteadosasasasas:', {
-            empresa: empresaParam,
-            local: localParam,
-            bodega: bodegaParam,
-            fechaInventario: fechaInventarioParam,
-            tipoItem: tipoItemParam
-        });
-
-        // Consulta SQL con valores dinámicos (usando los parámetros reales)
         const query = `
             SELECT * FROM BodegaMantenedor.dbo.Reconteos 
-            WHERE Empresa = '${empresaParam}'
-              AND NumeroLocal = '${localParam}'
-              AND GrupoBodega = ${bodegaParam}
-              AND FechaInventario = '${fechaInventarioParam}'
-              AND Clasif1 = '${tipoItemParam}'
-              AND Estado = 'EnProceso'
+            WHERE Empresa = '${empresa}'
+              AND NumeroLocal = '${local}'
+              AND FechaInventario = '${fechaInventario}'
+              AND Clasif1 = '${tipoProducto}'
+              AND NumeroReconteo = ${numeroReconteo}
             ORDER BY Ubicacion DESC
         `;
 
-        // Log de la consulta SQL con los valores reales
-       console.log('Consulta SQL con valores reales:', query);
+        console.log('Consulta SQL con valores reales:', query);
 
-        // Ejecutamos la consulta y obtenemos el resultado
         const responseReconteos = await request.query(query);
+        const resultados = responseReconteos.recordset;
 
-        return { status: 200, data: responseReconteos.recordset };
+        const itemsContados = resultados.filter(item => item.Estado === 'Recibido').length;
+        const reconteoTotal = resultados.length;
+
+        return {
+            status: 200,
+            data: resultados,
+            itemsContados,
+            reconteoTotal
+        };
     } catch (error) {
         console.log(`Error al obtener reconteos: ${error.message}`);
-        console.log("Error:", error);
-
         return { status: 500, error: `Error en el servidor al obtener reconteos: ${error.message}` };
     } finally {
         await closeDatabaseConnection();
     }
 }
+
 
 async function asignarReconteos2(data) {
     try {
@@ -264,53 +251,53 @@ async function asignarReconteos2(data) {
 
 async function asignarReconteos(data) {
     try {
-        console.log('Iniciamos la función asignarReconteos services', data);
+        console.log('Iniciamos la función asignarReconteos services', JSON.stringify(data));
 
-        // Agrupar los datos por nombre
         const listaReconteos = data;
 
         console.log('Conexión a la base de datos establecida.');
-        await connectToDatabase('BodegaMantenedor'); // Establecer conexión con la base de datos
+        await connectToDatabase('BodegaMantenedor');
 
-        const fallidos = []; // Lista para almacenar los ítems que no se pudieron actualizar
+        const fallidos = [];
 
-        // Procesar cada grupo de datos por nombre
         for (let reconteo of listaReconteos) {
-            console.log(`Procesando reconteo de ${reconteo.nombre}`);
+            console.log(`Procesando reconteo de: ${reconteo.nombre}`);
             const { nombre, cantidad } = reconteo;
             const cantidadFinal = cantidad === undefined ? 1 : cantidad;
 
-            // Iterar sobre los elementos en el arreglo 'data' dentro de cada grupo
             for (let itemData of reconteo.data) {
-                const item = itemData.Item; // Obtener el Item de cada objeto
-                console.log(`Procesando el Item: ${item}`);
+                const item = itemData.Item;
+                console.log(`Procesando el Item: ${JSON.stringify(itemData)}`);
 
                 try {
-                    const request = new sql.Request(); // Crear la solicitud SQL
+                    const request = new sql.Request();
 
-                    // Crear la consulta SQL de actualización
                     const query = `
                         UPDATE reconteos
-                            SET usuario = @nombre,
+                        SET usuario = @nombre,
                             NombreDispositivo = A.Capturador
-                            FROM reconteos r
-                            INNER JOIN BodegaMantenedor.dbo.asignaCapturador A ON A.Usuario = @nombre
-                            WHERE r.Item = @Item
-                            and numeroReconteo = @cantidadFinal
+                        FROM reconteos r
+                        INNER JOIN BodegaMantenedor.dbo.asignaCapturador A ON A.Usuario = @nombre
+                        WHERE r.Item = @Item
+                          AND r.numeroReconteo = @cantidadFinal
                     `;
 
-                    // Asignamos los parámetros para evitar inyecciones SQL
-                    request.input('Item', sql.NVarChar, item); // El parámetro para identificar el 'Item'
+                    // Asignar parámetros con logs
+                    console.log('--- Parámetros del UPDATE ---');
+                    console.log('Item:', item);
+                    console.log('nombre:', nombre);
+                    console.log('cantidadFinal:', cantidadFinal);
+                    console.log('------------------------------');
+
+                    request.input('Item', sql.NVarChar, item);
                     request.input('nombre', sql.NVarChar, nombre);
                     request.input('cantidadFinal', sql.Int, cantidadFinal);
 
-                    // Ejecutar la consulta SQL
                     const result = await request.query(query);
 
-                    // Verificar si se actualizó algún registro
-                    console.log(`result ${JSON.stringify(result)}.`);
+                    console.log(`Resultado SQL: ${JSON.stringify(result)}`);
                     if (result.rowsAffected[0] === 0) {
-                        console.log(`No se pudo procesar el reconteo para el item ${item}.`);
+                        console.warn(`No se pudo procesar el reconteo para el item ${item}.`);
                         fallidos.push({ item, usuario: nombre });
                     } else {
                         console.log(`Reconteo para el item ${item} procesado correctamente.`);
@@ -325,16 +312,17 @@ async function asignarReconteos(data) {
         return {
             status: 200,
             message: 'Reconteos procesados correctamente.',
-            fallidos // Devolver la lista de ítems que no se pudieron actualizar
+            fallidos
         };
 
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error general en asignarReconteos:", error);
         return { status: 500, error: 'Error al procesar los reconteos.' };
     } finally {
-        await closeDatabaseConnection(); // Cerrar la conexión a la base de datos
+        await closeDatabaseConnection();
     }
 }
+
 
 async function validarCantidadReconteos(data) {
     const { tipoItem, local, fechaInventario } = data;
@@ -346,8 +334,9 @@ async function validarCantidadReconteos(data) {
         logger.info(`Iniciamos la función validarCantidadReconteos services ${tipoItem}-${local}-${fechaInventario}`);
 
         const request = new sql.Request();
-        let tipoProducto; // Inicializamos tipoProducto
-        
+        let tipoProducto;
+
+        // Determinar el tipoProducto según el tipoItem
         if (tipoItem === '01-HERRAMIENTAS') {
             tipoProducto = 'HERRAMIENTAS';
             console.log('Entro en el if de HERRAMIENTAS');
@@ -368,50 +357,40 @@ async function validarCantidadReconteos(data) {
         request.input('local', sql.VarChar(80), local);
         request.input('fechaInventario', sql.Date, new Date(fechaInventario));
 
-
-
-        // Mostrar la consulta SQL con valores interpolados
-        const query = `
-          SELECT *
+        // Construir el query dinámicamente
+        let query = `
+            SELECT *
             FROM Reconteos
-            WHERE FechaInventario = '${fechaInventario}'
+            WHERE FechaInventario = @fechaInventario
             AND NumeroReconteo = (
-            SELECT MAX(NumeroReconteo)
-            FROM Reconteos
-            WHERE FechaInventario = '${fechaInventario}'
-			AND NumeroLocal = '${local}'
-			AND Empresa ='${empresa}'
-			AND Clasif1 = '${tipoProducto}'
-            and numeroReconteo <> 99
-        );
+                SELECT MAX(NumeroReconteo)
+                FROM Reconteos
+                WHERE FechaInventario = @fechaInventario
+                AND Clasif1 = @tipoProducto
+                AND NumeroLocal = @local
+                AND Empresa = @empresa
         `;
-        logger.info(`ejecutamos query para validarCantidadReconteos ${query}`);
+
+        // Solo si NO es ACCESORIOS, agregar condición extra
+        if (tipoProducto !== 'ACCESORIOS') {
+            query += ` AND NumeroReconteo <> 99`;
+        }
+
+        query += ` )`;
+
+        logger.info(`Query ejecutado para validarCantidadReconteos: ${query}`);
 
         // Ejecutar la consulta
-        const result = await request.query(`
-            SELECT *
-             FROM Reconteos
-             WHERE FechaInventario = @fechaInventario
-             AND NumeroReconteo = (
-                 SELECT MAX(NumeroReconteo)
-                 FROM Reconteos
-                 WHERE FechaInventario = @fechaInventario
-                     AND Clasif1 = @tipoProducto
-                     AND NumeroLocal = @local
-                     AND Empresa = @empresa
-                     and numeroReconteo <> 99
-                
-             );
-         `); 
+        const result = await request.query(query);
 
-         logger.info(` SELECT ejecutado correctamente: ${JSON.stringify(result.recordset)}`);
-         const enProceso = result.recordset.filter(item => item.Estado === "EnProceso").length;
-        
-        
-         if (result.recordset.length === 0) {
-            return { status: 200, data: { mensaje: 'sin registro de cierre', estado: 0 } };
+        logger.info(`SELECT ejecutado correctamente: ${JSON.stringify(result.recordset)}`);
+
+        const enProceso = result.recordset.filter(item => item.Estado === "EnProceso").length;
+
+        if (result.recordset.length === 0) {
+            return { status: 200, data: { mensaje: 'sin registro de cierre de conteo', estado: 0 } };
         } else {
-            return { status: 200, data: result.recordset[0] , enProceso : enProceso};
+            return { status: 200, data: result.recordset[0], enProceso: enProceso };
         }
     } catch (error) {
         console.error("Error:", error);
@@ -589,13 +568,11 @@ async function obtenerResumenReconteos(data){
         query = `SELECT * FROM BodegaMantenedor.dbo.ResumenReconteos 
             WHERE empresa = 'MAKITA'
             AND tipoItem  = @tipoItem
-            AND numeroReconteo = @numeroReconteo
             And cast(fechaInventario as date) = @fechaInventario`;
             
 
         // Prevenimos SQL Injection usando parámetros en la consult
         request.input('tipoItem', sql.VarChar, tipoProducto);
-        request.input('numeroReconteo', sql.VarChar, numeroReconteo);
         request.input('fechaInventario', sql.Date, fechaInventario); // Asegúrate de que el tipo de dato sea correcto
      
         logger.info(`Ejecutamos la query de obtenerResumenReconteos: ${query}`);
@@ -605,7 +582,7 @@ async function obtenerResumenReconteos(data){
         console.log("=== Respuesta de la base de datos ===");
        // console.log("resumenReconteoResponse",resumenReconteoResponse);
        
-       return { status: 200, data: resumenReconteoResponse.recordset[0] };
+       return { status: 200, data: resumenReconteoResponse.recordset };
     
     } catch (error) {
         console.log("Error:", error);  // Log del error
