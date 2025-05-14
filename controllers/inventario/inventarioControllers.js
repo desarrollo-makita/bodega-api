@@ -544,7 +544,8 @@ async function actualizarConteoCierre(req, res) {
         
         console.log(req.body);
        
-        const { agno, mes, fechaInventario, tipoItem, local, grupoBodega } =  req.body;
+        const { agno, mes, fechaInventario, tipoItem, local, grupoBodega } = req.body.dataCierre;
+
         // Conectar a la base de datos
         await connectToDatabase("BodegaMantenedor");    
         
@@ -559,7 +560,7 @@ async function actualizarConteoCierre(req, res) {
         request.input('FechaInventario', sql.Date, fechaInventario);
         request.input('TipoItem', sql.VarChar(20), tipoItem);
         request.input('Local', sql.VarChar(40), local);
-        request.input('Grupo', sql.Int, grupoBodega);
+        request.input('GrupoBodega', sql.Int, grupoBodega);
         request.input('Accion', sql.VarChar(20), 'INVTERMINADO');
         request.input('FechaInicio', sql.DateTime, new Date());  // fecha actual
         request.input('FechaTermino', sql.DateTime, new Date()); // fecha actual
@@ -571,7 +572,7 @@ async function actualizarConteoCierre(req, res) {
        const query = `
        INSERT INTO BitacoraInventario
        (Empresa, Agno, Mes, FechaInventario, Tipoitem, Local, GrupoBodega, Accion, FechaInicio, FechaTermino, Estado, Usuario)
-       VALUES (@Empresa, @Agno, @Mes, @FechaInventario, @TipoItem, @Local, @Grupo, 'INVTERMINADO', GETDATE(), GETDATE(), 1, 'ADMIN')
+       VALUES (@Empresa, @Agno, @Mes, @FechaInventario, @TipoItem, @Local, @GrupoBodega, 'INVTERMINADO', GETDATE(), GETDATE(), 1, 'ADMIN')
    `;
         
         // Ejecutar la consulta
