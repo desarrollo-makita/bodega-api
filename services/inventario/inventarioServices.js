@@ -398,6 +398,64 @@ async function validarCierreInventario(data) {
 }
 
 
+async function validarTerminoInventario(data) {
+    const { tipoItem, local, fechaInventario } = data;
+    const empresa = 'Makita';
+    const accion = 'INVTERMINADO';
+    await connectToDatabase('BodegaMantenedor');
+
+    try {
+        logger.info(`Iniciamos la función validarTerminoInventario services ${tipoItem}-${local}-${fechaInventario}`);
+
+        const request = new sql.Request();
+
+        // Parámetros para el query
+        request.input('empresa', sql.VarChar(50), empresa);
+        request.input('accion', sql.VarChar(80), accion);
+        request.input('tipoItem', sql.VarChar(80), tipoItem);
+        request.input('local', sql.VarChar(80), local);
+        request.input('fechaInventario', sql.Date, new Date(fechaInventario));
+
+
+        // Mostrar la consulta SQL con valores interpolados
+        const query = `
+            SELECT * 
+            FROM bitacoraInventario 
+            WHERE empresa = '${empresa}'
+            AND accion = '${accion}'
+            AND tipoItem = '${tipoItem}'
+            AND local = '${local}'
+            AND FechaInventario = '${fechaInventario}'
+        `;
+
+        logger.info(`Ejecutando consulta SQL: ${query}`);
+
+        // Ejecutar la consulta
+        const result = await request.query(`
+            SELECT * 
+            FROM bitacoraInventario 
+            WHERE empresa = @empresa 
+            AND accion = @accion
+            AND tipoItem = @tipoItem
+            AND local = @local
+            AND FechaInventario = @fechaInventario
+        `);
+
+        logger.info(`Consulta ejecutada correctamente validarTerminoInventario, registros encontrados: ${JSON.stringify(result)}`);
+
+        if (result.recordset.length === 0) {
+            return { status: 200, data: { mensaje: 'sin registro de termino', estado: 0 } };
+        } else {
+            return { status: 200, data: result.recordset[0]  , estado: 1};
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        return { status: 500, error: 'Error en el servidor al validarTerminoInventario' };
+    } finally {
+        await closeDatabaseConnection();
+    }
+}
+
 module.exports = {
     consultarInv,
     validarInicioInventario,
@@ -406,5 +464,6 @@ module.exports = {
     actualizarConteoCierre,
     actualizarConteoSinCierre,
     iniciarInventario,
-    validarCierreInventario
+    validarCierreInventario,
+    validarTerminoInventario
 };

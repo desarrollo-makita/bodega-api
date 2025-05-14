@@ -768,6 +768,26 @@ async function updateReconteo99(req, res) {
   } 
 }
 
+
+async function validarTerminoInventario(req, res) {
+  try {
+      console.log("Parámetros de entrada:", req.query);
+    
+      const data = req.query;
+
+      logger.info(`Iniciamos la función validarTerminoInventario - Controllers ${JSON.stringify(data)}`);
+
+      const result = await inventarioService.validarTerminoInventario(data);
+
+      res.status(result.status).json(result);
+  } catch (error) {
+      console.error("Error en validarTerminoInventario:", error);
+      res.status(500).json({ error: 'Error en el servidor al validarTerminoInventario' });
+  } finally {
+      await closeDatabaseConnection();
+  }
+}
+
 module.exports = {
     consultarInventario,
     asignarCapturador,
@@ -790,5 +810,6 @@ module.exports = {
     finalizarInventario,
     obtenerCategoria,
     obtenerReconteo99,
-    updateReconteo99
+    updateReconteo99,
+    validarTerminoInventario
   };
