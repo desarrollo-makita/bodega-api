@@ -192,6 +192,8 @@ async function consultarAsignacion(req, res) {
         // Conexión a la base de datos
         await connectToDatabase('BodegaMantenedor');
 
+        const request = new sql.Request();
+
         console.log("**********************" ,req.params)
         // Obtener parámetros de la URL
         const { tipoinventario, tipoitem, usuario, fechainventario, bodega } = req.params;
