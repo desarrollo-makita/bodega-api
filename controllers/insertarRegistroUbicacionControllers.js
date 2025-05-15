@@ -17,11 +17,11 @@ async function insertarRegistroUbicacion(req, res) {
         
         // Establecer los parámetros para el SP
         request.input('Usuario', sql.VarChar(50), usuario);
-        request.input('Item', sql.VarChar(50), item);
+        request.input('Item', sql.VarChar(50), item.trim());
         request.input('FechaCambio', sql.VarChar(50), fechaCambio); // Enviamos como VARCHAR
         request.input('TipoItem', sql.VarChar(50), tipoItem);
-        request.input('UbicacionAntigua', sql.VarChar(100), ubicacionAntigua);
-        request.input('NuevaUbicacion', sql.VarChar(100), nuevaUbicacion);
+        request.input('UbicacionAntigua', sql.VarChar(100), ubicacionAntigua.trim());
+        request.input('NuevaUbicacion', sql.VarChar(100), nuevaUbicacion.trim());
         request.input('Operacion', sql.VarChar(100), operacion);
 
         // Ejecutar el procedimiento almacenado

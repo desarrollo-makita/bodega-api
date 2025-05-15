@@ -53,12 +53,12 @@ async function iniciarReconteo(data) {
 }
 
 async function siguienteReconteo(data) {
-    const { local, bodega, fechaInventario, tipoItem ,almacenamiento} = data;
-    console.log("data _  siguienteReconteo", data)
+    const { local, bodega, fechaInventario, tipoItem, almacenamiento } = data;
+    console.log("data _  siguienteReconteo", data);
+
     const [anio, mesStr] = fechaInventario.split('-');
     const mes = parseInt(mesStr);
     const periodo = parseInt(anio);
-    
     const empresa = 'Makita';
 
     const data2 = {
@@ -88,19 +88,35 @@ async function siguienteReconteo(data) {
             .input('TipoItem', sql.VarChar, data2.tipoItem)
             .input('SumaSiNo', sql.VarChar, data2.almacenamiento)
             .output('NumeroID', sql.Int)
-            .output('MensajeID', sql.Varchar)
+            .output('MensajeID', sql.VarChar(255))
             .execute('sp_GenerarSiguienteReconteo');
 
-        logger.info(`Finalizó la ejecución de sp_GenerarSiguienteReconteo ${JSON.stringify(result)}`);
+        const numeroID = result.output.NumeroID;
+        const mensajeID = result.output.MensajeID;
 
-        return { status: 200, message: "Actualización realizada con éxito." };
+        logger.info(`Resultado SP: NumeroID=${numeroID}, MensajeID=${mensajeID}`);
+
+        // Evaluar resultado del SP y devolver respuesta adecuada
+        if (numeroID === 100) {
+            return { status: 200, message: mensajeID };
+        } else {
+            return {
+                status: 400,
+                message: mensajeID,
+                code: numeroID
+            };
+        }
     } catch (error) {
-        console.log("Error:", error);
-        return { status: 500, error: 'Error en el servidor al sp_GenerarSiguienteReconteo' };
+        console.error("Error al ejecutar sp_GenerarSiguienteReconteo:", error);
+        return {
+            status: 500,
+            error: 'Error en el servidor al ejecutar sp_GenerarSiguienteReconteo'
+        };
     } finally {
         await closeDatabaseConnection();
     }
 }
+
 
 
 async function obtenerReconteos(data) {
