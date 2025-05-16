@@ -6,16 +6,23 @@ const logger = require('../../config/logger.js');
 
 async function consultarInv(data) {
     let tipoProducto = '';
+    let grupo ;
+    let localNuevo;
     console.log('Datos recibidos:', data);  // Log para ver los datos de entrada
 
     const { tipoItem, local , fechaInventario } = data;  // Desestructuramos los valores del objeto 'data'
-
-
+    grupo  = local === '02' ?  2  : Number(local) ;
+    localNuevo = local === '02' ? '01' : local;
+    
+      
+    console.log("le mandamos el grupo : " , grupo);
+    console.log("le mandamos el nuevo local : " , localNuevo);
     if (tipoItem === '01-HERRAMIENTAS') {
         tipoProducto = 'HERRAMIENTAS';
         console.log('Entro en el if de HERRAMIENTAS');
     } else if (tipoItem === '03-ACCESORIOS') {
         tipoProducto = 'ACCESORIOS';
+       
         console.log('Entro en el if de ACCESORIOS');
     } else if (tipoItem === '04-REPUESTOS') {
         tipoProducto = 'REPUESTOS';
@@ -31,20 +38,23 @@ async function consultarInv(data) {
         await connectToDatabase('BodegaMantenedor');
         const request = new sql.Request();
 
+        console.log("le mandamos el grupo2 : " , grupo);
         // Log para ver la consulta antes de ejecutarse
-        console.log(`Ejecutamos la consulta con los parámetros: tipoItem=${tipoProducto}, local=${local}, fechaInventario=${fechaInventario}`);
+        console.log(`Ejecutamos la consulta con los parámetros: tipoItem=${tipoProducto}, local=${localNuevo}, fechaInventario=${fechaInventario}`);
 
         query = `SELECT * FROM BodegaMantenedor.dbo.RegistroInventario 
             WHERE empresa = 'MAKITA'
             AND tipoProducto = @tipoProducto
-            AND local = @local
+            AND local = @localNuevo
+            AND GrupoBodega =@grupo
             And cast(fechaCreacion as date) = @fechaInventario`;
             
 
         // Prevenimos SQL Injection usando parámetros en la consult
         request.input('tipoProducto', sql.VarChar, tipoProducto);
-        request.input('local', sql.VarChar, local);
-        request.input('fechaInventario', sql.Date, fechaInventario); // Asegúrate de que el tipo de dato sea correcto
+        request.input('localNuevo', sql.VarChar, localNuevo);
+        request.input('fechaInventario', sql.Date, fechaInventario);
+        request.input('grupo', sql.Int, grupo); // Asegúrate de que el tipo de dato sea correcto
      
         logger.info(`Ejecutamos la query de Inventario: ${query}`);
 

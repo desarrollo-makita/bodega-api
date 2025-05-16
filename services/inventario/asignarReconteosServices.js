@@ -385,28 +385,21 @@ async function validarCantidadReconteos(data) {
                 AND Clasif1 = @tipoProducto
                 AND NumeroLocal = @local
                 AND Empresa = @empresa
-        `;
-
-        // Solo si NO es ACCESORIOS, agregar condición extra
-        if (tipoProducto !== 'ACCESORIOS') {
-            query += ` AND NumeroReconteo <> 99`;
-        }
-
-        query += ` )`;
+    )`;
 
         logger.info(`Query ejecutado para validarCantidadReconteos: ${query}`);
 
         // Ejecutar la consulta
         const result = await request.query(query);
-
-        logger.info(`SELECT ejecutado correctamente: ${JSON.stringify(result.recordset)}`);
-
+        
         const enProceso = result.recordset.filter(item => item.Estado === "EnProceso").length;
+        const sinAsignar = result.recordset.filter(item => item.Usuario === "" && item.NombreDispositivo === "").length;
+        const itemsRecibidos = result.recordset.filter(item => item.Estado === "Recibido").length;
 
         if (result.recordset.length === 0) {
             return { status: 200, data: { mensaje: 'sin registro de cierre de conteo', estado: 0 } };
         } else {
-            return { status: 200, data: result.recordset[0], enProceso: enProceso };
+            return { status: 200, data: result.recordset[0], enProceso: enProceso  , sinAsignar : sinAsignar , itemsRecibidos:itemsRecibidos};
         }
     } catch (error) {
         console.error("Error:", error);
