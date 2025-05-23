@@ -50,6 +50,13 @@ async function consultarInv(data) {
             And cast(fechaCreacion as date) = @fechaInventario`;
             
 
+            console.log(`Query final con valores: 
+                        SELECT * FROM BodegaMantenedor.dbo.RegistroInventario 
+                        WHERE empresa = 'MAKITA'
+                        AND tipoProducto = '${tipoProducto}'
+                        AND local = '${localNuevo}'
+                        AND GrupoBodega = ${grupo}
+                        AND CAST(fechaCreacion AS date) = '${fechaInventario}'`);
         // Prevenimos SQL Injection usando parámetros en la consult
         request.input('tipoProducto', sql.VarChar, tipoProducto);
         request.input('localNuevo', sql.VarChar, localNuevo);
@@ -103,6 +110,7 @@ async function validarInicioInventario(data) {
             WHERE empresa = @empresa 
             AND estado = 0  
             AND accion = @accion
+            AND CAST(fechaInventario AS date) = '${fechaInventario}' 
         `);
 
         logger.info(`Consulta ejecutada correctamente, registros encontrados: ${result.recordset.length}`);
@@ -270,7 +278,7 @@ async function eliminarBitacoraInventario(empresa, periodo, mes, numeroLocal, gr
 
 async function actualizarConteoCierre(data) {
     const { periodo, mes, tipoItem, local, grupo , fechaInventario } = data; // Desestructuración
-    const empresa = 'makita';
+    const empresa = 'Makita';
 
     logger.info(`========== INICIO: Actualización de Conteo Cierre ==========`);  
     logger.info(`Parámetros de entrada: ${JSON.stringify(data)}`);
@@ -297,6 +305,7 @@ async function actualizarConteoCierre(data) {
         // logger.info(`Respuesta de la base de datos: ${JSON.stringify(result.returnValue)}`);
 
         const returnValue = result.returnValue; // Si no devuelve nada, asumimos 0
+        console.log("respuesta de returnValue : " , result);
 
         if (returnValue !== 0) {
             logger.warn(`Procedimiento almacenado retornó un código inesperado: ${returnValue}`);
