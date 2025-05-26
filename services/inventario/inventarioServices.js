@@ -176,7 +176,7 @@ async function getGrupoBodega(data) {
         const request = new sql.Request();
 
         // Usamos los valores desestructurados en la consulta
-        query = `SELECT DISTINCT NumeroLocal , NombreGrupoBodega, GrupoBodega
+        query = `SELECT DISTINCT *
                     FROM grupobodega
                     WHERE numerolocal IN ('01', '04', '03', '05');`;
 
