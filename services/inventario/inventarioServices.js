@@ -14,9 +14,7 @@ async function consultarInv(data) {
     grupo  = local === '02' ?  2  : Number(local) ;
     localNuevo = local === '02' ? '01' : local;
     
-      
-    console.log("le mandamos el grupo : " , grupo);
-    console.log("le mandamos el nuevo local : " , localNuevo);
+    
     if (tipoItem === '01-HERRAMIENTAS') {
         tipoProducto = 'HERRAMIENTAS';
         console.log('Entro en el if de HERRAMIENTAS');
@@ -42,12 +40,17 @@ async function consultarInv(data) {
         // Log para ver la consulta antes de ejecutarse
         console.log(`Ejecutamos la consulta con los parámetros: tipoItem=${tipoProducto}, local=${localNuevo}, fechaInventario=${fechaInventario}`);
 
-        query = `SELECT * FROM BodegaMantenedor.dbo.RegistroInventario 
-            WHERE empresa = 'MAKITA'
-            AND tipoProducto = @tipoProducto
-            AND local = @localNuevo
-            AND GrupoBodega =@grupo
-            And cast(fechaCreacion as date) = @fechaInventario`;
+        query = `SELECT Empresa, Ano, Mes, FechaInventario, local, NombreLocal, GrupoBodega, KeyItem, TipoItem, Item,
+                Descripcion, Obsoleto, Vigencia, TipoProducto, Categoria, SaldoStock, Conteo, Diferencia,
+                Reconteo01, Diferencia01, Reconteo02, Diferencia02, Reconteo03, Diferencia03,
+                Reconteo04, Diferencia04, Reconteo05, Diferencia05, Reconteo06, Diferencia06,
+                Reconteo07, Diferencia07,Costo,CostoTotal, Estado, Observacion, Ubicacion, FechaCreacion, EstadoProceso
+                FROM BodegaMantenedor.dbo.RegistroInventario 
+                WHERE empresa = 'MAKITA'
+                AND tipoProducto = @tipoProducto
+                AND local = @localNuevo
+                AND GrupoBodega = @grupo
+                AND CAST(fechaCreacion AS date) = @fechaInventario;`;
             
 
             console.log(`Query final con valores: 

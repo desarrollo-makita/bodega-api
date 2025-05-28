@@ -46,7 +46,9 @@ const {
   obtenerCategoria,
   obtenerReconteo99,
   updateReconteo99,
-  validarTerminoInventario
+  validarTerminoInventario,
+  VerLoCapturado,
+  VerLoCapturadoReconteo
   
 } = require('../controllers/inventario/inventarioControllers');
 
@@ -161,8 +163,10 @@ router.get('/obtener-resumen-reconteo', obtenerResumenReconteos );
 
 router.post('/finalizar-inventario', finalizarInventario);
 router.get('/insertar-inventario-categoria/:empresa', obtenerCategoria);
-router.get('/insertar-inventario-categoria/:empresa/:agno/:mes/:tipoinventario/:numerolocal/:tipoitem/:usuario/:grupobodega', obtenerReconteo99);
+router.get('/insertar-inventario-categoria/:empresa/:agno/:mes/:fechainventario/:tipoinventario/:numerolocal/:tipoitem/:usuario/:grupobodega', obtenerReconteo99);
 router.post('/insertar-inventario-categoria/', updateReconteo99);
+router.get('/insertar-inventario-vercapturaH/:tipoinventario/:tipoitem/:usuario/:fechainventario/:local', VerLoCapturado);
+router.get('/insertar-inventario-vercaptura/:tipoinventario/:tipoitem/:usuario/:fechainventario/:local', VerLoCapturadoReconteo);
 
 
 

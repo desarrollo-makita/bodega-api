@@ -188,13 +188,13 @@ async function consultarAsignacion(req, res) {
   }
 
   async function obtenerUltimaUbicacion(req, res) {
+    logger.info(`Iniciamos funcion obtenerUltimaUbicacion XXXX - ${req.params}`);
     try {
         // Conexión a la base de datos
         await connectToDatabase('BodegaMantenedor');
 
         const request = new sql.Request();
-
-        console.log("**********************" ,req.params)
+        
         // Obtener parámetros de la URL
         const { tipoinventario, tipoitem, usuario, fechainventario, bodega } = req.params;
 
@@ -223,9 +223,6 @@ async function consultarAsignacion(req, res) {
                     AND Bodega = @bodega
               );
         `;
-
-        // Crear el objeto de la consulta
-        
 
         // Pasar los parámetros a la consulta
         request.input('tipoinventario', sql.NVarChar, tipoinventario);
@@ -274,8 +271,7 @@ async function consultarAsignacion(req, res) {
         logger.info(`Se formatea fecha  - ${fechaFormateada}`);
 
         logger.info(`PASA  - ${fechaFormateada}`);
-
-      
+        
         const consulta = `SELECT DISTINCT item 
                           FROM inventario  
                           WHERE cast(FechaInventario as date) =  '${fechaFormateada}'
@@ -287,7 +283,7 @@ async function consultarAsignacion(req, res) {
         logger.info(`Ejecutando consulta: ${consulta}`);
      
         const result = await sql.query(consulta);
-       logger.info(`Resultado de la consulta:   - ${JSON.stringify(result.recordset)}`);
+        logger.info(`Resultado de la consulta:   - ${JSON.stringify(result.recordset)}`);
 
         // Verificar si se encontraron resultados
         if (result.recordset.length > 0) {
@@ -655,16 +651,9 @@ async function obtenerReconteo99(req, res) {
     await connectToDatabase("BodegaMantenedor");
       // Obtener el ID de la URL
       const { empresa,agno,mes,tipoinventario, numerolocal, tipoitem, usuario,grupobodega } = req.params;
-      // Convertir fecha a formato YYYY-MM-DD
-      // const fechaFormateada = moment(fechainventario, ['YYYY-MM-DD', 'DD-MM-YYYY', 'MM-DD-YYYY']).format('YYYY-MM-DD');
-
-      //logger.info(`Se formatea fecha  - ${fechaFormateada}`);
-
-     // logger.info(`PASA 1 - ${fechaFormateada}`);
-
-      // Construir la consulta utilizando el item como filtro
+      
       const consulta = ` select Clasif1,Item,Ubicacion,NumeroReconteo
-                           from Reconteos
+                           from PreConteo
                           where empresa = '${empresa}'
                             AND Agno = '${agno}'
                             AND Mes = '${mes}'
@@ -695,10 +684,8 @@ async function obtenerReconteo99(req, res) {
           // Si no se encontraron resultados, responder con un mensaje
           res.status(404).json({ error: "No se encontraron datos" });
       }
-     // logger.info(`Fin de la funcion obtenerUltimaUbicacion`);
-
     
-  } catch (error) {
+    } catch (error) {
       // Manejar errores
       logger.error(`Error al obtener en los parametros: ${error.message}`);
       res.status(500).json({ error: "Error interno del servidor" });
@@ -713,9 +700,9 @@ async function updateReconteo99(req, res) {
 
     await connectToDatabase("BodegaMantenedor");
       
-      const { Id,Empresa,Agno,Mes,FechaInventario,TipoInventario
+      const { Empresa,Agno,Mes,FechaInventario,TipoInventario
           ,NumeroReconteo,NumeroLocal,GrupoBodega,Clasif1
-          ,Ubicacion,Item,Cantidad,Estado,Usuario,NombreDispositivo 
+          ,Item,Cantidad,Estado,Usuario,NombreDispositivo 
       } = req.body;
 
        // Verificar si algún campo está vacío, es null o undefined
@@ -725,9 +712,7 @@ async function updateReconteo99(req, res) {
           logger.error(`Error faltan parametros de entrada a la solicitud`);
           return res.status(400).json({ error: `Todos los campos son requeridos INSERTA.` });
       }
-
-     
-
+      
       const consulta = ` UPDATE reconteos set estado = 'Recibido'
                                              ,cantidad = rtrim('${Cantidad}')
       WHERE Empresa = rtrim('${Empresa}') 
@@ -746,17 +731,17 @@ async function updateReconteo99(req, res) {
         AND NombreDispositivo =  rtrim('${NombreDispositivo}')
          `;
 
-   logger.info(`UPDATE a ejecutar : ${consulta}`);
+    logger.info(`UPDATE a ejecutar : ${consulta}`);
   
-  const result = await sql.query(consulta);
+    const result = await sql.query(consulta);
 
 
-  if (result.rowsAffected && result.rowsAffected[0] > 0) {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      res.json({ mensaje: `Reconteo99 - update reconteos para el item ${Item}` });
-  } else {
-      res.status(200).json({ mensaje: "Reconteo99 - No se modifico el ${Item} " });
-  }
+    if (result.rowsAffected && result.rowsAffected[0] > 0) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        res.json({ mensaje: `Reconteo99 - update reconteos para el item ${Item}` });
+    } else {
+        res.status(200).json({ mensaje: "Reconteo99 - No se modifico el ${Item} " });
+    }
 
    //logger.info(`Fin de la funcion RespuestaReconteos`);
   } catch (error) {
@@ -788,6 +773,92 @@ async function validarTerminoInventario(req, res) {
   }
 }
 
+async function VerLoCapturado(req, res) {
+    
+     logger.info(`Iniciamos función VerLoCapturado 11111 - ${JSON.stringify(req.params)}`);
+
+    try {
+        // Obtener el ID de la URL
+        const { tipoinventario,tipoitem,usuario,fechainventario,local } = req.params;
+        
+        const fechaFormateada = moment(fechainventario, ['YYYY-MM-DD', 'DD-MM-YYYY', 'MM-DD-YYYY']).format('YYYY-MM-DD');
+        
+        const consulta = ` select clasif1,1,Item,Ubicacion,Cantidad,FechaInventario
+                             from inventario
+                            WHERE empresa = 'MAKITA' 
+                              AND TipoInventario = '${tipoinventario}'
+                              AND cast(FechaInventario as date) =  '${fechaFormateada}'
+                              AND clasif1 = '${tipoitem}'
+                              AND Usuario = '${usuario}'
+                              AND SUBSTRING(bodega, 1, 2)  =  SUBSTRING('${local}', 1, 2) 
+                              AND estado = 'Ingresado'
+                              order by FechaInventario desc
+                             `;
+          logger.info(`Query que ejecuta:   - ${consulta}`);
+           
+          const result = await sql.query(consulta);
+       
+          if (result.recordset.length > 0) {
+              
+              res.json(result.recordset);
+            
+          } 
+          else
+          {
+              res.status(404).json({ error: "No se encontraron datos" });
+          
+          }
+      } catch (error) {
+        // Manejar errores
+        logger.error(`Error al obtener listado: ${error.message}`);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+}
+
+
+async function VerLoCapturadoReconteo(req, res) {
+    
+     logger.info(`Iniciamos función VerLoCapturadoReconteo 222 - ${JSON.stringify(req.params)}`);
+
+    try {
+      // Obtener el ID de la URL
+      const { tipoinventario,tipoitem,usuario,fechainventario,local } = req.params;
+
+      // Convertir fecha a formato YYYY-MM-DD
+        const fechaFormateada = moment(fechainventario, ['YYYY-MM-DD', 'DD-MM-YYYY', 'MM-DD-YYYY']).format('YYYY-MM-DD');
+
+      const consulta = ` select clasif1,NumeroReconteo,Item,Ubicacion,Cantidad
+                             from reconteos
+                            WHERE empresa = 'MAKITA' 
+                              AND TipoInventario = '${tipoinventario}'
+                              AND cast(FechaInventario as date) =  '${fechaFormateada}'
+                              AND clasif1 = '${tipoitem}'
+                              AND Usuario = '${usuario}'
+                              AND NumeroLocal =  SUBSTRING('${local}', 1, 2) 
+                              AND estado = 'Recibido'
+                              order by clasif1,Ubicacion,item
+                             `;
+                             
+      logger.info(`Query que ejecuta:   - ${consulta}`);
+           
+      const result = await sql.query(consulta);
+      
+      if (result.recordset.length > 0) {
+          
+          res.json(result.recordset);
+        
+      } 
+      else{
+          res.status(404).json({ error: "No se encontraron datos" });
+      }
+    }catch (error) {
+        // Manejar errores
+        logger.error(`Error al obtener listado: ${error.message}`);
+        res.status(500).json({ error: "Error interno del servidor" });
+    }
+}
+
+
 module.exports = {
     consultarInventario,
     asignarCapturador,
@@ -811,5 +882,7 @@ module.exports = {
     obtenerCategoria,
     obtenerReconteo99,
     updateReconteo99,
-    validarTerminoInventario
+    validarTerminoInventario,
+    VerLoCapturado,
+    VerLoCapturadoReconteo
   };
