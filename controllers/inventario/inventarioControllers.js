@@ -783,6 +783,8 @@ async function VerLoCapturado(req, res) {
      logger.info(`Iniciamos función VerLoCapturado 11111 - ${JSON.stringify(req.params)}`);
 
     try {
+    
+       await connectToDatabase("BodegaMantenedor");
         // Obtener el ID de la URL
         const { tipoinventario,tipoitem,usuario,fechainventario,local } = req.params;
         
@@ -818,6 +820,10 @@ async function VerLoCapturado(req, res) {
         logger.error(`Error al obtener listado: ${error.message}`);
         res.status(500).json({ error: "Error interno del servidor" });
     }
+
+    finally {
+      await closeDatabaseConnection();
+  }
 }
 
 
@@ -826,6 +832,8 @@ async function VerLoCapturadoReconteo(req, res) {
      logger.info(`Iniciamos función VerLoCapturadoReconteo 222 - ${JSON.stringify(req.params)}`);
 
     try {
+
+       await connectToDatabase("BodegaMantenedor");
       // Obtener el ID de la URL
       const { tipoinventario,tipoitem,usuario,fechainventario,local } = req.params;
 
@@ -861,6 +869,9 @@ async function VerLoCapturadoReconteo(req, res) {
         logger.error(`Error al obtener listado: ${error.message}`);
         res.status(500).json({ error: "Error interno del servidor" });
     }
+    finally {
+      await closeDatabaseConnection();
+  }
 }
 
 
