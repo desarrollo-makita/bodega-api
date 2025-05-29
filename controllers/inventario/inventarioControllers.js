@@ -713,41 +713,46 @@ async function updateReconteo99(req, res) {
           return res.status(400).json({ error: `Todos los campos son requeridos INSERTA.` });
       }
       
-      const consulta = ` UPDATE reconteos set estado = 'Recibido'
-                                             ,cantidad = rtrim('${Cantidad}')
-      WHERE Empresa = rtrim('${Empresa}') 
-        AND Agno    =  rtrim('${Agno}')
-        AND Mes     =  rtrim('${Mes}')
-        AND FechaInventario = rtrim('${FechaInventario}')
-        AND TipoInventario = 'RECONTEO'
-        AND NumeroReconteo = 99
-        AND NumeroLocal = SUBSTRING('${NumeroLocal}', 1, 2)
-        AND GrupoBodega =  rtrim('${GrupoBodega}')
-        AND Clasif1 =  rtrim('${Clasif1}')
-  
-        AND Item =  rtrim('${Item}')
-        AND Estado =  'EnProceso'
-        AND Usuario =  rtrim('${Usuario}')
-        AND NombreDispositivo =  rtrim('${NombreDispositivo}')
-         `;
+      const consulta = ` UPDATE PreConteo set estado = 'Recibido'
+                                               ,cantidad = rtrim('${Cantidad}')
+        WHERE Empresa = rtrim('${Empresa}') 
+          AND Agno    =  rtrim('${Agno}')
+          AND Mes     =  rtrim('${Mes}')
+          AND FechaInventario = rtrim('${FechaInventario}')
+          AND TipoInventario = 'RECONTEO'
+          AND NumeroReconteo = 99
+          AND NumeroLocal = SUBSTRING('${NumeroLocal}', 1, 2)
+          AND GrupoBodega =  rtrim('${GrupoBodega}')
+          AND Clasif1 =  rtrim('${Clasif1}')
+          AND Item =  rtrim('${Item}')
+          AND Estado =  'EnProceso'
+          AND Usuario =  rtrim('${Usuario}')
+          AND NombreDispositivo =  rtrim('${NombreDispositivo}')
+           `;
 
-    logger.info(`UPDATE a ejecutar : ${consulta}`);
-  
+     logger.info(`UPDATE a ejecutar : ${consulta}`);
+
     const result = await sql.query(consulta);
 
 
-    if (result.rowsAffected && result.rowsAffected[0] > 0) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        res.json({ mensaje: `Reconteo99 - update reconteos para el item ${Item}` });
-    } else {
-        res.status(200).json({ mensaje: "Reconteo99 - No se modifico el ${Item} " });
+     if (result.rowsAffected && result.rowsAffected[0] > 0) {
+       //await new Promise(resolve => setTimeout(resolve, 300));
+        //res.json({ mensaje: `Reconteo99 - update reconteos para el item ${Item}` });
+       res.status(200).json({ exito: true, mensaje: `UpdateReconteo99 - se modificó el item ${Item}` });
+
+    } 
+    else
+     {
+       res.status(200).json({ exito: false, mensaje: `UpdateReconteo99 - No se modificó el item ${Item}` });
     }
+
 
    //logger.info(`Fin de la funcion RespuestaReconteos`);
   } catch (error) {
       // Manejar errores
       logger.error(`Error al insertar Reconteo99: ${error.message}`);
-      res.status(500).json({ error: "Error interno del servidor" });
+       res.status(500).json({ error: "Error interno del servidor" });
+
   }finally{
       await closeDatabaseConnection();
   } 
