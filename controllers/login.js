@@ -54,16 +54,14 @@ async function login(req, res) {
       const token = generateToken(login, vigencia);
       
       
-      if (login.data.Rol === 'Administrador' || login.data.Rol === 'Operario') {
+      if (login.data.Rol === 'Administrador' || login.data.Rol === 'Operario' || login.data.Rol === 'ST') {
         showMenu = await menuServices.getAllMenuService();
         
-      if (login.data.UsuarioID === 1195){
-          showMenu = showMenu.filter(item => item.MenuID === 4);
-          console.log("showMenu", showMenu);
-      }
-        
-        
-        
+     if (login.data.Rol === 'ST') {
+      showMenu = showMenu.filter(item => ['Servicio Tecnico', 'Crear Orden De Trabajo'].includes(item.Nombre));
+      console.log("showMenu", showMenu);
+    }
+      
         showActividades = await actividadServices.getActividadesUsuarioId(idUsuario);
         
       } else if(login.data.Rol === 'Consulta') {
@@ -77,7 +75,7 @@ async function login(req, res) {
           menu: showMenu,
           token: token,
           vigencia: vigencia,
-          actividades: showActividades.data // Aquí agregas allMenu como una propiedad del objeto data
+          actividades: showActividades?.data || []
         },
       };
 

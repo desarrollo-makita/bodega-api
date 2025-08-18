@@ -13,6 +13,7 @@ const generateToken = (user, vigencia) => {
       fechaInicio: user.data.FechaInicio,
       fechaFin: user.data.FechaFin,
       vigencia: vigencia,
+      cardCode: user.data.CardCode
     },
     SECRET_KEY,
     { expiresIn: '8h' }

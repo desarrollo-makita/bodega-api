@@ -33,9 +33,13 @@ async function crearUsuarios(data) {
       fechaInicio: FechaInicio,
       fechaFin: FechaFin,
       nombreUsuario: NombreUsuario,
-      clave: Clave
-      
+      clave: Clave,
+      cardCode
     } = dataRequest;
+
+    // Si CardCode es null, undefined, vacío o 0 → usar "C-0"
+    const CardCode = !cardCode || cardCode === 0 ? 'C-0' : cardCode;
+
 
     // Verificación de parámetros requeridos
     const requiredParams = {
@@ -50,6 +54,7 @@ async function crearUsuarios(data) {
       FechaFin,
       NombreUsuario,
       Clave,
+      CardCode
      
     };
 
@@ -90,6 +95,7 @@ async function crearUsuarios(data) {
       .input('FechaFin', sql.VarChar, formatDate(FechaFin))
       .input('NombreUsuario', sql.VarChar(50), NombreUsuario)
       .input('ClaveHash', sql.VarChar(256), ClaveHash)
+      .input('CardCode', sql.VarChar(256), CardCode)
       .output('Mensaje', sql.VarChar)
       .output('StatusID', sql.Int)
       .output('UsuarioID', sql.Int)
