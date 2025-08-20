@@ -112,7 +112,8 @@ async function obtenerGrupoBodega(req, res) {
         const consulta = ` SELECT distinct GrupoBodega,NombreGrupoBodega
                             FROM grupobodega
                             WHERE empresa = '${empresa}'
-                            AND Numerolocal = '${NumeroLocal}'`;
+                            AND Numerolocal = '${NumeroLocal}'
+                            AND Inventariable = 1 `;
                                 
         logger.info(`Query que ejecuta:   - ${consulta}`);
         
