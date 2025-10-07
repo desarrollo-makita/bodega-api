@@ -341,13 +341,13 @@ async function asignarReconteos(data) {
 
 
 async function validarCantidadReconteos(data) {
-    const { tipoItem, local, fechaInventario } = data;
+    const { tipoItem, local, fechaInventario, grupo } = data;
     const empresa = 'Makita';
     const accion = 'RECONTEO';
     await connectToDatabase('BodegaMantenedor');
 
     try {
-        logger.info(`Iniciamos la función validarCantidadReconteos services ${tipoItem}-${local}-${fechaInventario}`);
+        logger.info(`Iniciamos la función validarCantidadReconteos services ${tipoItem}-${local}-${fechaInventario} ${grupo}`);
 
         const request = new sql.Request();
         let tipoProducto;
@@ -372,6 +372,7 @@ async function validarCantidadReconteos(data) {
         request.input('tipoProducto', sql.VarChar(80), tipoProducto);
         request.input('local', sql.VarChar(80), local);
         request.input('fechaInventario', sql.Date, new Date(fechaInventario));
+        request.input('grupo', sql.Int, grupo);
 
         // Construir el query dinámicamente
         let query = `
@@ -385,7 +386,8 @@ async function validarCantidadReconteos(data) {
                 AND Clasif1 = @tipoProducto
                 AND NumeroLocal = @local
                 AND Empresa = @empresa
-    )`;
+                AND grupoBodega = @grupo
+                )`;
 
         logger.info(`Query ejecutado para validarCantidadReconteos: ${query}`);
 
@@ -405,7 +407,7 @@ async function validarCantidadReconteos(data) {
         console.error("Error:", error);
         return { status: 500, error: 'Error en el servidor al validarCierreInventario' };
     } finally {
-        await closeDatabaseConnection();
+      //  await closeDatabaseConnection();
     }
 }
 

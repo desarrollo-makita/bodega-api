@@ -6,14 +6,10 @@ const logger = require('../../config/logger.js');
 
 async function consultarInv(data) {
     let tipoProducto = '';
-    let grupo ;
     let localNuevo;
     console.log('Datos recibidos:', data);  // Log para ver los datos de entrada
 
-    const { tipoItem, local , fechaInventario } = data;  // Desestructuramos los valores del objeto 'data'
-    grupo  = local === '02' ?  2  : Number(local) ;
-    localNuevo = local === '02' ? '01' : local;
-    
+    const { tipoItem, local , fechaInventario, grupo } = data;  // Desestructuramos los valores del objeto 'data'
     
     if (tipoItem === '01-HERRAMIENTAS') {
         tipoProducto = 'HERRAMIENTAS';
@@ -38,31 +34,31 @@ async function consultarInv(data) {
 
         console.log("le mandamos el grupo2 : " , grupo);
         // Log para ver la consulta antes de ejecutarse
-        console.log(`Ejecutamos la consulta con los parámetros: tipoItem=${tipoProducto}, local=${localNuevo}, fechaInventario=${fechaInventario}`);
+        console.log(`Ejecutamos la consulta con los parámetros: tipoItem=${tipoProducto}, local=${local}, fechaInventario=${fechaInventario}, grupo=${grupo}`);
 
         query = `SELECT Empresa, Ano, Mes, FechaInventario, local, NombreLocal, GrupoBodega, KeyItem, TipoItem, Item,
                 Descripcion, Obsoleto, Vigencia, TipoProducto, Categoria, SaldoStock, Conteo, Diferencia,
                 Reconteo01, Diferencia01, Reconteo02, Diferencia02, Reconteo03, Diferencia03,
                 Reconteo04, Diferencia04, Reconteo05, Diferencia05, Reconteo06, Diferencia06,
                 Reconteo07, Diferencia07,Costo,CostoTotal, Estado, Observacion, Ubicacion, FechaCreacion, EstadoProceso
-                FROM BodegaMantenedor.dbo.RegistroInventario 
+                FROM BodegaMantenedor.dbo.RegistroInventarioDetalle 
                 WHERE empresa = 'MAKITA'
                 AND tipoProducto = @tipoProducto
-                AND local = @localNuevo
+                AND local = @local
                 AND GrupoBodega = @grupo
-                AND CAST(fechaCreacion AS date) = @fechaInventario;`;
+                AND CAST(fechaInventario AS date) = @fechaInventario;`;
             
 
             console.log(`Query final con valores: 
-                        SELECT * FROM BodegaMantenedor.dbo.RegistroInventario 
+                        SELECT * FROM BodegaMantenedor.dbo.RegistroInventarioDetalle 
                         WHERE empresa = 'MAKITA'
                         AND tipoProducto = '${tipoProducto}'
-                        AND local = '${localNuevo}'
+                        AND local = '${local}'
                         AND GrupoBodega = ${grupo}
-                        AND CAST(fechaCreacion AS date) = '${fechaInventario}'`);
+                        AND CAST(fechaInventario AS date) = '${fechaInventario}'`);
         // Prevenimos SQL Injection usando parámetros en la consult
         request.input('tipoProducto', sql.VarChar, tipoProducto);
-        request.input('localNuevo', sql.VarChar, localNuevo);
+        request.input('local', sql.VarChar, local);
         request.input('fechaInventario', sql.Date, fechaInventario);
         request.input('grupo', sql.Int, grupo); // Asegúrate de que el tipo de dato sea correcto
      
@@ -70,7 +66,7 @@ async function consultarInv(data) {
 
         const inventarioResponse = await request.query(query);
 
-        console.log("=== Respuesta de la base de datos ===");
+        console.log("=== Respuesta de la base de datos ===" , inventarioResponse.recordset.length === 0);
        // console.log("inventarioResponse",inventarioResponse);  
         
         if(inventarioResponse.recordset.length === 0) {
@@ -225,7 +221,7 @@ async function iniciarInventario(data) {
             request.input('Empresa', sql.VarChar(20), empresa);
             request.input('Agno', sql.VarChar(40), periodo);
             request.input('Mes', sql.Int, mes);
-            request.input('TipoItem', sql.VarChar(20), tipoItem);
+            request.input('TipoItem', sql.VarChar(20), tipoItem || '');
             request.input('Local', sql.VarChar(40), numeroLocal);
             request.input('Grupo', sql.Int, grupoBodega);
             request.input('FechaInventario', sql.Date, fechaInventario);
@@ -280,14 +276,14 @@ async function eliminarBitacoraInventario(empresa, periodo, mes, numeroLocal, gr
 }
 
 async function actualizarConteoCierre(data) {
-    const { periodo, mes, tipoItem, local, grupo , fechaInventario } = data; // Desestructuración
+    const { periodo, mes, tipoItem, local,fechaInventario , grupoBodega } = data; // Desestructuración
     const empresa = 'Makita';
 
     logger.info(`========== INICIO: Actualización de Conteo Cierre ==========`);  
     logger.info(`Parámetros de entrada: ${JSON.stringify(data)}`);
-
+     await connectToDatabase('BodegaMantenedor');
     try {
-        await connectToDatabase('BodegaMantenedor');
+       
         logger.info(`Conexión a la base de datos establecida correctamente.`);
 
         const request = new sql.Request();
@@ -297,9 +293,9 @@ async function actualizarConteoCierre(data) {
             .input('Mes', sql.Int, mes)
             .input('TipoItem', sql.VarChar, tipoItem)
             .input('Local', sql.VarChar, local)
-            .input('Grupo', sql.Int, grupo)
+            .input('Grupo', sql.Int, parseInt(grupoBodega, 10))
             .input('FechaInventario', sql.Date,fechaInventario)
-            .execute('sp_ActualizaAvance');
+            .execute('BodegaMantenedor.dbo.sp_ActualizaAvance');
 
         logger.info(`Procedimiento almacenado ejecutado: sp_ActualizaAvance`);
         logger.info(`Parámetros enviados -> Empresa: ${empresa}, Periodo: ${periodo}, Mes: ${mes}, TipoItem: ${tipoItem}, Local: ${local}, Grupo: ${grupo}`);
@@ -362,13 +358,12 @@ async function actualizarConteoSinCierre(data) {
 }
 
 async function validarCierreInventario(data) {
-    const { tipoItem, local, fechaInventario } = data;
+    const { tipoItem, local, fechaInventario, grupo } = data;
     const empresa = 'Makita';
     const accion = 'CIERREINV';
     await connectToDatabase('BodegaMantenedor');
-
     try {
-        logger.info(`Iniciamos la función validarCierreInventario services ${tipoItem}-${local}-${fechaInventario}`);
+        logger.info(`Iniciamos la función validarCierreInventario services ${tipoItem}-${local}-${fechaInventario}-${grupo}`);
 
         const request = new sql.Request();
 
@@ -378,6 +373,7 @@ async function validarCierreInventario(data) {
         request.input('tipoItem', sql.VarChar(80), tipoItem);
         request.input('local', sql.VarChar(80), local);
         request.input('fechaInventario', sql.Date, new Date(fechaInventario));
+        request.input('grupo', sql.Int, grupo);
 
 
         // Mostrar la consulta SQL con valores interpolados
@@ -389,6 +385,7 @@ async function validarCierreInventario(data) {
             AND tipoItem = '${tipoItem}'
             AND local = '${local}'
             AND FechaInventario = '${fechaInventario}'
+            and GrupoBodega = ${grupo}
         `;
 
         logger.info(`Ejecutando consulta SQL: ${query}`);
@@ -402,6 +399,7 @@ async function validarCierreInventario(data) {
             AND tipoItem = @tipoItem
             AND local = @local
             AND FechaInventario = @fechaInventario
+            AND GrupoBodega = @grupo
         `);
 
         logger.info(`Consulta ejecutada correctamente validarCierreInventario, registros encontrados: ${JSON.stringify(result)}`);
@@ -421,13 +419,13 @@ async function validarCierreInventario(data) {
 
 
 async function validarTerminoInventario(data) {
-    const { tipoItem, local, fechaInventario } = data;
+    const { tipoItem, local, fechaInventario , bodega , grupo } = data;
     const empresa = 'Makita';
     const accion = 'INVTERMINADO';
-    await connectToDatabase('BodegaMantenedor');
-
+    
     try {
-        logger.info(`Iniciamos la función validarTerminoInventario services ${tipoItem}-${local}-${fechaInventario}`);
+        await connectToDatabase('BodegaMantenedor');
+        logger.info(`Iniciamos la función validarTerminoInventario services ${tipoItem}-${local}-${fechaInventario}-${grupo}`);
 
         const request = new sql.Request();
 
@@ -437,6 +435,7 @@ async function validarTerminoInventario(data) {
         request.input('tipoItem', sql.VarChar(80), tipoItem);
         request.input('local', sql.VarChar(80), local);
         request.input('fechaInventario', sql.Date, new Date(fechaInventario));
+        request.input('grupo', sql.Int, grupo);
 
 
         // Mostrar la consulta SQL con valores interpolados
@@ -448,6 +447,7 @@ async function validarTerminoInventario(data) {
             AND tipoItem = '${tipoItem}'
             AND local = '${local}'
             AND FechaInventario = '${fechaInventario}'
+            AND GrupoBodega = ${grupo}
         `;
 
         logger.info(`Ejecutando consulta SQL: ${query}`);
@@ -461,6 +461,7 @@ async function validarTerminoInventario(data) {
             AND tipoItem = @tipoItem
             AND local = @local
             AND FechaInventario = @fechaInventario
+            AND GrupoBodega = @grupo
         `);
 
         logger.info(`Consulta ejecutada correctamente validarTerminoInventario, registros encontrados: ${JSON.stringify(result)}`);
@@ -474,7 +475,7 @@ async function validarTerminoInventario(data) {
         console.error("Error:", error);
         return { status: 500, error: 'Error en el servidor al validarTerminoInventario' };
     } finally {
-        await closeDatabaseConnection();
+        //await closeDatabaseConnection();
     }
 }
 

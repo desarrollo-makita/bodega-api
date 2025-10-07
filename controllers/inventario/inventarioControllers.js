@@ -360,13 +360,11 @@ async function consultarAsignacion(req, res) {
  */
   async function consularGrupoBodega(req, res) {
     try {
-        
-        
-        logger.info(`Iniciamos la función consularGrupoBodega - Controllers`);
+      logger.info(`Iniciamos la función consularGrupoBodega - Controllers`);
       
-        const asignacionList = await inventarioService.getGrupoBodega();
+      const asignacionList = await inventarioService.getGrupoBodega();
 
-        res.status(200).json(asignacionList);
+      res.status(200).json(asignacionList);
       
     } catch (error) {
       console.error(error);
@@ -765,7 +763,7 @@ async function validarTerminoInventario(req, res) {
     
       const data = req.query;
 
-      logger.info(`Iniciamos la función validarTerminoInventario - Controllers ${JSON.stringify(data)}`);
+      logger.info(`Iniciamos la función validarTerminoInventario - Controllers@ ${JSON.stringify(data)}`);
 
       const result = await inventarioService.validarTerminoInventario(data);
 

@@ -35,7 +35,7 @@ async function perfilConsulta(data) {
         const request = new sql.Request();
         
         // Buscar el usuario por NombreUsuario
-        const consultaMenu = await request.query(`SELECT * FROM Menu where nombre  = 'informes' `);
+        const consultaMenu = await request.query(`SELECT * FROM Menu where nombre  = 'inventario' `);
        
         if (consultaMenu.recordset.length === 0) {
             return ({ status: 401 ,  error: 'No hay menu' });
