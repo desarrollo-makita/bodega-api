@@ -55,11 +55,11 @@ async function login(req, res) {
       
       console.log("login : " , login.data);
       
-      if (login.data.Rol === 'Administrador' || login.data.Rol === 'Operario' || login.data.Rol === 'ST') {
+      if (login.data.Rol === 'Administrador' || login.data.Rol === 'Operario' || login.data.Rol === 'ST' || login.data.Rol === 'STM') {
         showMenu = await menuServices.getAllMenuService();
         console.log("showMenu" , showMenu);
         
-        if (login.data.Rol === 'ST') {
+        if (login.data.Rol === 'ST' || login.data.Rol === 'STM') {
           showMenu = showMenu.filter(item => ['Servicio Tecnico', 'Crear Orden De Trabajo'].includes(item.Nombre));
           console.log("showMenu", showMenu);
         }
