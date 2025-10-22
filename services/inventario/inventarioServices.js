@@ -233,7 +233,7 @@ async function iniciarInventario(data) {
             resultados.push({ tipoItem, mensaje,result}); // Guardamos el resultado de cada ejecución
         }
 
-        logger.info(`Finalizó la ejecución de sp_RegistroInventario para todas las categorías`);
+        logger.info(`Finalizó la ejecución de sp_RegistroInventario para todas las categorías exitosamente`);
 
         return { status: 200, resultados };
     } catch (error) { 
@@ -298,7 +298,7 @@ async function actualizarConteoCierre(data) {
             .execute('BodegaMantenedor.dbo.sp_ActualizaAvance');
 
         logger.info(`Procedimiento almacenado ejecutado: sp_ActualizaAvance`);
-        logger.info(`Parámetros enviados -> Empresa: ${empresa}, Periodo: ${periodo}, Mes: ${mes}, TipoItem: ${tipoItem}, Local: ${local}, Grupo: ${grupo}`);
+        logger.info(`Parámetros enviados -> Empresa: ${empresa}, Periodo: ${periodo}, Mes: ${mes}, TipoItem: ${tipoItem}, Local: ${local}, Grupo: ${grupoBodega}`);
 
         // Log de la respuesta de la base de datos
         // logger.info(`Respuesta de la base de datos: ${JSON.stringify(result.returnValue)}`);
@@ -448,6 +448,8 @@ async function validarTerminoInventario(data) {
             AND local = '${local}'
             AND FechaInventario = '${fechaInventario}'
             AND GrupoBodega = ${grupo}
+
+           
         `;
 
         logger.info(`Ejecutando consulta SQL: ${query}`);
